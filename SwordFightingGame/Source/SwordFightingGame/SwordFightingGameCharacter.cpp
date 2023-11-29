@@ -57,6 +57,10 @@ ASwordFightingGameCharacter::ASwordFightingGameCharacter()
 	// Note: The skeletal mesh and anim blueprint references on the Mesh component (inherited from Character) 
 	// are set in the derived blueprint asset named ThirdPersonCharacter (to avoid direct content references in C++)
 
+	// Setup the Combat Component
+	m_pCombatComponent = CreateDefaultSubobject<UCombatComponent>(TEXT("Combat Component"));
+
+
 	SetupStimulus();
 }
 
@@ -298,51 +302,6 @@ void ASwordFightingGameCharacter::HandleOnMontageNotifyBegin(FName NotifyName, c
 
 			}, 2, false);
 		}
-	}
-	else if (NotifyName.ToString().Contains("CheckAttackCollisions"))
-	{
-		// Sphere Location
-		FVector vOffset = (GetActorForwardVector() * 80.0f) + FVector(0.0f, 0.0f, 25.0f);
-		FVector pLocation = GetActorLocation() + vOffset;
-
-		// Generate a hit sphere at the slash location
-		GenerateHitSphere(pLocation, 30.0f, 10.0f);
-	}
-	else if (NotifyName.ToString().Contains("CheckJumpSlash"))
-	{
-		// Sphere Location
-		FVector vOffset = (GetActorForwardVector() * 100.0f) + FVector(0.0f, 0.0f, -75.0f);
-		FVector pLocation = GetActorLocation() + vOffset;
-
-		// Generate a hit sphere at the slash location
-		GenerateHitSphere(pLocation, 50.0f, 10.0f);
-	}
-	else if (NotifyName.ToString().Contains("CheckDodgeSlash"))
-	{
-		// Sphere Location
-		FVector vOffset = (GetActorForwardVector() * 80.0f) + FVector(0.0f, 0.0f, 5.0f);
-		FVector pLocation = GetActorLocation() + vOffset;
-
-		// Generate a hit sphere at the slash location
-		GenerateHitSphere(pLocation, 80.0f, 10.0f);
-	}
-	else if (NotifyName.ToString().Contains("CheckHeavySlash"))
-	{
-		// Sphere Location
-		FVector vOffset = (GetActorForwardVector() * 100.0f) + FVector(0.0f, 0.0f, -50.0f);
-		FVector pLocation = GetActorLocation() + vOffset;
-
-		// Generate a hit sphere at the slash location
-		GenerateHitSphere(pLocation, 50.0f, 20.0f);
-	}
-	else if (NotifyName.ToString().Contains("CheckRunSlash"))
-	{
-		// Sphere Location
-		FVector vOffset = (GetActorForwardVector() * 100.0f) + FVector(0.0f, 0.0f, 5.0f);
-		FVector pLocation = GetActorLocation() + vOffset;
-
-		// Generate a hit sphere at the slash location
-		GenerateHitSphere(pLocation, 60.0f, 10.0f);
 	}
 	else // Attack Combos
 	{

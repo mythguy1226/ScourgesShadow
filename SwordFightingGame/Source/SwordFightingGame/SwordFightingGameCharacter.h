@@ -6,6 +6,7 @@
 #include "GameFramework/Character.h"
 #include "Boss.h"
 #include "NiagaraFunctionLibrary.h"
+#include "CombatComponent.h"
 #include "SwordFightingGameCharacter.generated.h"
 
 UCLASS(config=Game)
@@ -20,6 +21,9 @@ class ASwordFightingGameCharacter : public ACharacter
 	/** Follow camera */
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Camera, meta = (AllowPrivateAccess = "true"))
 	class UCameraComponent* FollowCamera;
+
+	// Combat Component
+	UCombatComponent* m_pCombatComponent;
 
 	// Reference to HUD class
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "UserInterface", meta = (AllowPrivateAccess = "true"))
