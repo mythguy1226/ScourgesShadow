@@ -6,6 +6,7 @@
 #include "GameFramework/Character.h"
 #include "MoltenSword.h"
 #include "Components/WidgetComponent.h"
+#include "CombatComponent.h"
 #include "Boss.generated.h"
 
 UCLASS()
@@ -22,6 +23,9 @@ class SWORDFIGHTINGGAME_API ABoss : public ACharacter
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = UserInterface, meta = (AllowPrivateAccess = "true"))
 	UWidgetComponent* m_pTargetLockWidget;
+
+	// Combat Component
+	UCombatComponent* m_pCombatComponent;
 
 public:
 	// Sets default values for this character's properties
@@ -86,10 +90,6 @@ public:
 	void PoundAttack();
 	void TakeDamage(float a_fDamage);
 	AMoltenSword* m_pEquippedSword;
-	FVector vStartPoint;
-	FVector vMiddlePoint;
-	FVector vEndPoint;
-	void GenerateHitSphere(FVector a_vLocation, float a_fRadius, float a_fDamage, bool a_bDebug = false, bool a_bKnockback = false);
 
 	// Death handling
 	void Die();
@@ -97,7 +97,4 @@ public:
 	// Montage End Event Handler
 	UFUNCTION()
 	void HandleOnMontageEnded(UAnimMontage* a_pMontage, bool a_bInterrupted);
-
-	UFUNCTION()
-	void HandleOnMontageNotifyBegin(FName NotifyName, const FBranchingPointNotifyPayload& BranchingPointPayload);
 };

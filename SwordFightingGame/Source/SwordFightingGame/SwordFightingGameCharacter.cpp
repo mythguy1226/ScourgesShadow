@@ -493,73 +493,6 @@ void ASwordFightingGameCharacter::HeavyAttack()
 	}
 }
 
-void ASwordFightingGameCharacter::GenerateHitSphere(FVector a_vLocation, float a_fRadius, float a_fDamage, bool a_bDebug)
-{
-	// Init hit results
-	TArray<FHitResult> outHits;
-	TArray<AActor*> ignoredActors;
-	ignoredActors.Add(this);
-
-	// Use Sphere Shape
-	FCollisionShape sphereShape;
-	sphereShape.ShapeType = ECollisionShape::Sphere;
-	sphereShape.SetSphere(a_fRadius);
-
-	// Set the query params
-	FCollisionQueryParams queryParams;
-	queryParams.AddIgnoredActor(this);
-
-	// Sweep Trace at typical contact point of swing
-	GetWorld()->SweepMultiByChannel(outHits, a_vLocation, a_vLocation, FQuat::Identity, ECollisionChannel::ECC_Pawn, sphereShape, queryParams);
-
-	// Debug Trace to show visual representation
-	if (a_bDebug)
-	{
-		// Sweep Trace at typical contact point of swing with debugging visuals
-		UKismetSystemLibrary::SphereTraceMulti(GetWorld(), a_vLocation, a_vLocation,
-			a_fRadius,
-			UEngineTypes::ConvertToTraceType(ECollisionChannel::ECC_Pawn), true, ignoredActors,
-			EDrawDebugTrace::ForDuration, outHits, true, FColor::Red);
-	}
-
-	// Check that a collision happened
-	if (outHits.Num() > 0)
-	{
-		// Iterate through the hit results
-		for (auto i = outHits.CreateIterator(); i; i++)
-		{
-			// Try to cast to the player
-			ABoss* pBoss = Cast<ABoss>(i->GetActor());
-			if (pBoss) // Continue if valid
-			{
-				// Deal damage
-				pBoss->TakeDamage(a_fDamage);
-
-				// Spawn Blood Particle at the hit location
-				if(m_pBloodParticle != nullptr)
-					UNiagaraFunctionLibrary::SpawnSystemAtLocation(GetWorld(), m_pBloodParticle, a_vLocation, FQuat::Identity.Rotator());
-
-				// Play damage indicator sound
-				if (m_pSlashImpactSound != nullptr)
-					UGameplayStatics::PlaySoundAtLocation(GetWorld(), m_pSlashImpactSound, GetActorLocation());
-
-				// Handle stun meter
-				if (pBoss->m_pHurtMontage != nullptr)
-				{
-					// Deplete stun meter
-					pBoss->m_fStunMeter -= 15.0f;
-					if (pBoss->m_fStunMeter <= 0.0f) // Stun the boss
-					{
-						pBoss->GetMesh()->GetAnimInstance()->Montage_Play(pBoss->m_pHurtMontage);
-						pBoss->m_fStunMeter = 100.0f;
-					}
-				}
-				break;
-			}
-		}
-	}
-}
-
 bool ASwordFightingGameCharacter::IsAttacking()
 {
 	// Return true if any attack montage is playing
@@ -606,6 +539,10 @@ void ASwordFightingGameCharacter::BeginPlay()
 		UUserWidget* HUD = CreateWidget<UUserWidget>(Cast<APlayerController>(GetController()), m_cPlayerHUD);
 		HUD->AddToViewport(9999);
 	}
+
+	// Set combat component asset refs
+	m_pCombatComponent->m_pImpactParticle = m_pBloodParticle;
+	m_pCombatComponent->m_pImpactSound = m_pSlashImpactSound;
 }
 
 void ASwordFightingGameCharacter::Tick(float a_fDeltaTime)

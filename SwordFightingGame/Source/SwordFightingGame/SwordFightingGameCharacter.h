@@ -126,7 +126,6 @@ public:
 	// Method for handling light attacks
 	void LightAttack();
 	void HeavyAttack();
-	void GenerateHitSphere(FVector a_vLocation, float a_fRadius, float a_fDamage, bool a_bDebug = false);
 
 	// Method for getting whether player is attacking
 	bool IsAttacking();

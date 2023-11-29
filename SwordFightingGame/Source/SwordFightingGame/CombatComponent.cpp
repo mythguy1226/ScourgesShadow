@@ -2,8 +2,8 @@
 
 
 #include "CombatComponent.h"
-#include "Kismet/GameplayStatics.h"
-#include "NiagaraFunctionLibrary.h"
+#include "Boss.h"
+#include "SwordFightingGameCharacter.h"
 
 // Sets default values for this component's properties
 UCombatComponent::UCombatComponent()
@@ -30,25 +30,25 @@ void UCombatComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActo
 
 }
 
-void UCombatComponent::GenerateHitSphere(FVector a_vLocation, float a_fRadius, float a_fDamage, bool a_bDebug)
+void UCombatComponent::GenerateHitSphere(FVector a_vLocation, float a_fRadius, float a_fDamage, bool a_bDebug, bool a_bKnockback)
 {
 	// Init hit results
 	TArray<FHitResult> outHits;
 	TArray<AActor*> ignoredActors;
 	ignoredActors.Add(GetOwner());
-
+	
 	// Use Sphere Shape
 	FCollisionShape sphereShape;
 	sphereShape.ShapeType = ECollisionShape::Sphere;
 	sphereShape.SetSphere(a_fRadius);
-
+	
 	// Set the query params
 	FCollisionQueryParams queryParams;
 	queryParams.AddIgnoredActor(GetOwner());
-
+	
 	// Sweep Trace at typical contact point of swing
 	GetWorld()->SweepMultiByChannel(outHits, a_vLocation, a_vLocation, FQuat::Identity, ECollisionChannel::ECC_Pawn, sphereShape, queryParams);
-
+	
 	// Debug Trace to show visual representation
 	if (a_bDebug)
 	{
@@ -58,64 +58,51 @@ void UCombatComponent::GenerateHitSphere(FVector a_vLocation, float a_fRadius, f
 			UEngineTypes::ConvertToTraceType(ECollisionChannel::ECC_Pawn), true, ignoredActors,
 			EDrawDebugTrace::ForDuration, outHits, true, FColor::Red);
 	}
-
+	
 	// Check that a collision happened
 	if (outHits.Num() > 0)
 	{
 		// Iterate through the hit results
 		for (auto i = outHits.CreateIterator(); i; i++)
 		{
+			// Try to cast to a boss
+			ABoss* pBoss = Cast<ABoss>(i->GetActor());
+			if (pBoss) // Continue if valid
+			{
+				HandleBossDamage(pBoss, a_vLocation, a_fDamage);
+				break;
+			}
+			
 			// Try to cast to the player
-			//UCombatComponent* pVictim = Cast<UCombatComponent>(i->GetActor());
-			//if (pBoss) // Continue if valid
-			//{
-			//	// Deal damage
-			//	pBoss->TakeDamage(a_fDamage);
-			//
-			//	// Spawn Blood Particle at the hit location
-			//	if (m_pBloodParticle != nullptr)
-			//		UNiagaraFunctionLibrary::SpawnSystemAtLocation(GetWorld(), m_pBloodParticle, a_vLocation, FQuat::Identity.Rotator());
-			//
-			//	// Play damage indicator sound
-			//	if (m_pSlashImpactSound != nullptr)
-			//		UGameplayStatics::PlaySoundAtLocation(GetWorld(), m_pSlashImpactSound, GetOwner()->GetActorLocation());
-			//
-			//	// Handle stun meter
-			//	if (pBoss->m_pHurtMontage != nullptr)
-			//	{
-			//		// Deplete stun meter
-			//		pBoss->m_fStunMeter -= 15.0f;
-			//		if (pBoss->m_fStunMeter <= 0.0f) // Stun the boss
-			//		{
-			//			pBoss->GetMesh()->GetAnimInstance()->Montage_Play(pBoss->m_pHurtMontage);
-			//			pBoss->m_fStunMeter = 100.0f;
-			//		}
-			//	}
-			//	break;
-			//}
+			ASwordFightingGameCharacter* pPlayer = Cast<ASwordFightingGameCharacter>(i->GetActor());
+			if (pPlayer) // Continue if valid
+			{
+				HandlePlayerDamage(pPlayer, i->Location, a_fDamage, a_bKnockback);
+				break;
+			}
 		}
 	}
 }
 
-void UCombatComponent::GenerateHitCapsule(FVector a_vBeginLoc, FVector a_vEndLoc, float a_fRadius, float a_fDamage, bool a_bDebug)
+void UCombatComponent::GenerateHitCapsule(FVector a_vBeginLoc, FVector a_vEndLoc, float a_fRadius, float a_fDamage, bool a_bDebug, bool a_bKnockback)
 {
 	// Init hit results
 	TArray<FHitResult> outHits;
 	TArray<AActor*> ignoredActors;
 	ignoredActors.Add(GetOwner());
-
+	
 	// Use Sphere Shape
 	FCollisionShape sphereShape;
 	sphereShape.ShapeType = ECollisionShape::Sphere;
 	sphereShape.SetSphere(a_fRadius);
-
+	
 	// Set the query params
 	FCollisionQueryParams queryParams;
 	queryParams.AddIgnoredActor(GetOwner());
-
+	
 	// Sweep Trace at typical contact point of swing
 	GetWorld()->SweepMultiByChannel(outHits, a_vBeginLoc, a_vEndLoc, FQuat::Identity, ECollisionChannel::ECC_Pawn, sphereShape, queryParams);
-
+	
 	// Debug Trace to show visual representation
 	if (a_bDebug)
 	{
@@ -125,41 +112,111 @@ void UCombatComponent::GenerateHitCapsule(FVector a_vBeginLoc, FVector a_vEndLoc
 			UEngineTypes::ConvertToTraceType(ECollisionChannel::ECC_Pawn), true, ignoredActors,
 			EDrawDebugTrace::ForDuration, outHits, true, FColor::Red);
 	}
-
+	
 	// Check that a collision happened
 	if (outHits.Num() > 0)
 	{
 		// Iterate through the hit results
 		for (auto i = outHits.CreateIterator(); i; i++)
 		{
+			// Try to cast to a boss
+			ABoss* pBoss = Cast<ABoss>(i->GetActor());
+			if (pBoss) // Continue if valid
+			{
+				HandleBossDamage(pBoss, a_vEndLoc, a_fDamage);
+				break;
+			}
+			
 			// Try to cast to the player
-			//UCombatComponent* pVictim = Cast<UCombatComponent>(i->GetActor());
-			//if (pBoss) // Continue if valid
-			//{
-			//	// Deal damage
-			//	pBoss->TakeDamage(a_fDamage);
-			//
-			//	// Spawn Blood Particle at the hit location
-			//	if (m_pBloodParticle != nullptr)
-			//		UNiagaraFunctionLibrary::SpawnSystemAtLocation(GetWorld(), m_pBloodParticle, a_vLocation, FQuat::Identity.Rotator());
-			//
-			//	// Play damage indicator sound
-			//	if (m_pSlashImpactSound != nullptr)
-			//		UGameplayStatics::PlaySoundAtLocation(GetWorld(), m_pSlashImpactSound, GetOwner()->GetActorLocation());
-			//
-			//	// Handle stun meter
-			//	if (pBoss->m_pHurtMontage != nullptr)
-			//	{
-			//		// Deplete stun meter
-			//		pBoss->m_fStunMeter -= 15.0f;
-			//		if (pBoss->m_fStunMeter <= 0.0f) // Stun the boss
-			//		{
-			//			pBoss->GetMesh()->GetAnimInstance()->Montage_Play(pBoss->m_pHurtMontage);
-			//			pBoss->m_fStunMeter = 100.0f;
-			//		}
-			//	}
-			//	break;
-			//}
+			ASwordFightingGameCharacter* pPlayer = Cast<ASwordFightingGameCharacter>(i->GetActor());
+			if (pPlayer) // Continue if valid
+			{
+				HandlePlayerDamage(pPlayer, i->Location, a_fDamage, a_bKnockback);
+				break;
+			}
+		}
+	}
+}
+
+void UCombatComponent::HandleBossDamage(ABoss* a_pBoss, FVector a_vLoc, float a_fDamage)
+{
+	// Deal damage
+	a_pBoss->TakeDamage(a_fDamage);
+
+	// Spawn Blood Particle at the hit location
+	if (m_pImpactParticle != nullptr)
+		UNiagaraFunctionLibrary::SpawnSystemAtLocation(GetWorld(), m_pImpactParticle, a_vLoc, FQuat::Identity.Rotator());
+
+	// Play damage indicator sound
+	if (m_pImpactSound != nullptr)
+		UGameplayStatics::PlaySoundAtLocation(GetWorld(), m_pImpactSound, GetOwner()->GetActorLocation());
+
+	// Handle stun meter
+	if (a_pBoss->m_pHurtMontage != nullptr)
+	{
+		// Deplete stun meter
+		a_pBoss->m_fStunMeter -= 15.0f;
+		if (a_pBoss->m_fStunMeter <= 0.0f) // Stun the boss
+		{
+			a_pBoss->GetMesh()->GetAnimInstance()->Montage_Play(a_pBoss->m_pHurtMontage);
+			a_pBoss->m_fStunMeter = 100.0f;
+		}
+	}
+}
+
+void UCombatComponent::HandlePlayerDamage(ASwordFightingGameCharacter* a_pPlayer, FVector a_vLoc, float a_fDamage, bool a_bKnockback)
+{
+	// Return if player is dying or dead
+	if (a_pPlayer->m_fHealth <= 0)
+	{
+		return;
+	}
+
+	// Don't deal damage if player is dodging
+	if (!a_pPlayer->m_bIsDodging && !a_pPlayer->IsStaggered() && !a_pPlayer->IsDying())
+	{
+		// Play hurt animation and deal damage
+		if (a_pPlayer->m_pHurtMontage != nullptr && !a_bKnockback)
+		{
+			// If player isn't block do normal damage
+			if (!a_pPlayer->m_bIsBlocking)
+			{
+				// Play hurt sound
+				if (a_pPlayer->m_pHurtSound != nullptr)
+					UGameplayStatics::PlaySoundAtLocation(GetWorld(), a_pPlayer->m_pHurtSound, GetOwner()->GetActorLocation());
+
+				a_pPlayer->GetMesh()->GetAnimInstance()->Montage_Play(a_pPlayer->m_pHurtMontage);
+				a_pPlayer->TakeDamage(a_fDamage);
+			}
+			else // Otherwise negate some damage
+			{
+				// Play impact sound
+				if (a_pPlayer->m_pBlockSound != nullptr)
+					UGameplayStatics::PlaySoundAtLocation(GetWorld(), a_pPlayer->m_pBlockSound, GetOwner()->GetActorLocation());
+
+				a_pPlayer->GetMesh()->GetAnimInstance()->Montage_Play(a_pPlayer->m_pShieldImpactMontage);
+				a_pPlayer->TakeDamage(a_fDamage / 2.0f);
+			}
+		}
+
+		// Handle Forceful attacks
+		if (a_bKnockback)
+		{
+			// Spawn Blood Particle at the hit location
+			if (a_pPlayer->m_pBloodParticle != nullptr)
+				UNiagaraFunctionLibrary::SpawnSystemAtLocation(GetWorld(), a_pPlayer->m_pBloodParticle, a_vLoc, FQuat::Identity.Rotator());
+
+			// Play damage indicator sound
+			if (a_pPlayer->m_pKnockbackSound != nullptr)
+				UGameplayStatics::PlaySoundAtLocation(GetWorld(), a_pPlayer->m_pKnockbackSound, a_pPlayer->GetActorLocation());
+
+			if (!a_pPlayer->GetMesh()->GetAnimInstance()->Montage_IsPlaying(a_pPlayer->m_pKnockbackMontage))
+			{
+				FVector playerToEnemy = a_pPlayer->GetActorLocation() - GetOwner()->GetActorLocation();
+				a_pPlayer->LaunchCharacter(playerToEnemy * 30, true, true);
+				a_pPlayer->GetMesh()->GetAnimInstance()->Montage_Play(a_pPlayer->m_pKnockbackMontage);
+				a_pPlayer->TakeDamage(a_fDamage);
+			}
 		}
 	}
 }

@@ -20,8 +20,8 @@ private:
 	FVector vSlashEnd;
 
 	// Fields for tracking timing of checks
-	float fTimeBetweenChecks = 0.001f;
-	float fCheckTimer = 0.001f;
+	float fTimeBetweenChecks = 0.005f;
+	float fCheckTimer = 0.005f;
 
 public:
 
@@ -36,6 +36,10 @@ public:
 	// Damage dealt
 	UPROPERTY(EditAnywhere)
 	float m_fDamage;
+
+	// Knockback flag
+	UPROPERTY(EditAnywhere)
+	bool m_bKnockback = false;
 
 	// Whether or not to use continuous slash tracking or single check
 	UPROPERTY(EditAnywhere)
