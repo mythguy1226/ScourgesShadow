@@ -45,6 +45,14 @@ public:
 	UPROPERTY(EditAnywhere)
 	bool m_bContinuousTracing = true;
 
+	// Number of traces to check along slash path
+	UPROPERTY(EditAnywhere)
+	int m_iNumTraceChecks = 5;
+
+	// Debug mode for visually showing slash path
+	UPROPERTY(EditAnywhere)
+	bool m_bDebugMode = false;
+
 	// Override firing in editor to be false
 	bool bShouldFireInEditor = false;
 

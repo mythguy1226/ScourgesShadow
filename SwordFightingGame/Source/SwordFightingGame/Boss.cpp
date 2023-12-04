@@ -36,6 +36,9 @@ void ABoss::BeginPlay()
 
 	// Attach the sword to the boss 
 	AttachSword();
+
+	// Set health to the max health
+	m_pCombatComponent->m_fHealth = m_fMaxHealth;
 }
 
 // Called every frame
@@ -57,6 +60,11 @@ void ABoss::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
 {
 	Super::SetupPlayerInputComponent(PlayerInputComponent);
 
+}
+
+UCombatComponent* ABoss::GetCombatComponent()
+{
+	return m_pCombatComponent;
 }
 
 void ABoss::AttachSword()
@@ -89,7 +97,7 @@ void ABoss::SlashAttack()
 	if (pAnimInstance != nullptr)
 	{
 		// Can't attack when staggered
-		if (pAnimInstance->Montage_IsPlaying(m_pHurtMontage) || m_fHealth <= 0.0f)
+		if (pAnimInstance->Montage_IsPlaying(m_pHurtMontage) || m_pCombatComponent->m_fHealth <= 0.0f)
 		{
 			return;
 		}
@@ -114,7 +122,7 @@ void ABoss::KickAttack()
 	if (pAnimInstance != nullptr)
 	{
 		// Can't attack when staggered
-		if (pAnimInstance->Montage_IsPlaying(m_pHurtMontage) || m_fHealth <= 0.0f)
+		if (pAnimInstance->Montage_IsPlaying(m_pHurtMontage) || m_pCombatComponent->m_fHealth <= 0.0f)
 		{
 			return;
 		}
@@ -133,7 +141,7 @@ void ABoss::PoundAttack()
 	if (pAnimInstance != nullptr)
 	{
 		// Can't attack when staggered
-		if (pAnimInstance->Montage_IsPlaying(m_pHurtMontage) || m_fHealth <= 0.0f)
+		if (pAnimInstance->Montage_IsPlaying(m_pHurtMontage) || m_pCombatComponent->m_fHealth <= 0.0f)
 		{
 			return;
 		}
@@ -165,10 +173,10 @@ void ABoss::TakeDamage(float a_fDamage)
 	}
 
 	// Deal damage
-	m_fHealth -= a_fDamage;
+	m_pCombatComponent->m_fHealth -= a_fDamage;
 
 	// Death handling
-	if (m_fHealth <= 0)
+	if (m_pCombatComponent->m_fHealth <= 0)
 	{
 		Die();
 	}

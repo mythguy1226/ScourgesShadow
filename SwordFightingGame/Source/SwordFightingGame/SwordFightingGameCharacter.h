@@ -23,6 +23,7 @@ class ASwordFightingGameCharacter : public ACharacter
 	class UCameraComponent* FollowCamera;
 
 	// Combat Component
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
 	UCombatComponent* m_pCombatComponent;
 
 	// Reference to HUD class
@@ -162,8 +163,6 @@ public:
 	// *** Handle Damage and Staggering ***
 	bool IsStaggered();
 	void TakeDamage(float a_fDamage);
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
-	float m_fHealth = 100.0f;
 	bool IsDying();
 
 	// *** Stamina ***

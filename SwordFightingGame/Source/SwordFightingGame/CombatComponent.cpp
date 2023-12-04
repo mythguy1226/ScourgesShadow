@@ -167,7 +167,7 @@ void UCombatComponent::HandleBossDamage(ABoss* a_pBoss, FVector a_vLoc, float a_
 void UCombatComponent::HandlePlayerDamage(ASwordFightingGameCharacter* a_pPlayer, FVector a_vLoc, float a_fDamage, bool a_bKnockback)
 {
 	// Return if player is dying or dead
-	if (a_pPlayer->m_fHealth <= 0)
+	if (m_fHealth <= 0)
 	{
 		return;
 	}

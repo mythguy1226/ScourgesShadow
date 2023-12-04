@@ -15,10 +15,14 @@ void UANS_SlashWindow::NotifyBegin(USkeletalMeshComponent* MeshComp, UAnimSequen
 
 	// Generate a hit sphere at the slash location (if not continuous)
 	if(!m_bContinuousTracing)
-		combatComp->GenerateHitSphere(pLocation, m_fRadius, m_fDamage, true, m_bKnockback);
+		combatComp->GenerateHitSphere(pLocation, m_fRadius, m_fDamage, m_bDebugMode, m_bKnockback);
 
 	// Set the slash begin to the socket location
 	vSlashBegin = pLocation;
+
+	// Set time between checks based on total duration
+	fTimeBetweenChecks = TotalDuration / static_cast<float>(m_iNumTraceChecks);
+	fCheckTimer = fTimeBetweenChecks;
 }
 
 void UANS_SlashWindow::NotifyTick(USkeletalMeshComponent* MeshComp, UAnimSequenceBase* Animation, float FrameDeltaTime, const FAnimNotifyEventReference& EventReference)
@@ -37,7 +41,7 @@ void UANS_SlashWindow::NotifyTick(USkeletalMeshComponent* MeshComp, UAnimSequenc
 
 		// Generate the hit capsule 
 		if(m_bContinuousTracing)
-			combatComp->GenerateHitCapsule(vSlashBegin, vSlashEnd, m_fRadius, m_fDamage, true, m_bKnockback);
+			combatComp->GenerateHitCapsule(vSlashBegin, vSlashEnd, m_fRadius, m_fDamage, m_bDebugMode, m_bKnockback);
 
 		// Update the begin location
 		vSlashBegin = pLocation;
@@ -59,5 +63,5 @@ void UANS_SlashWindow::NotifyEnd(USkeletalMeshComponent* MeshComp, UAnimSequence
 
 	// Generate the hit capsule 
 	if (m_bContinuousTracing)
-		combatComp->GenerateHitCapsule(vSlashBegin, vSlashEnd, m_fRadius, m_fDamage, true, m_bKnockback);
+		combatComp->GenerateHitCapsule(vSlashBegin, vSlashEnd, m_fRadius, m_fDamage, m_bDebugMode, m_bKnockback);
 }

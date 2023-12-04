@@ -28,7 +28,7 @@ EBTNodeResult::Type UBTT_ChasePlayer::ExecuteTask(UBehaviorTreeComponent& a_pTre
 		ABoss* pBoss = Cast<ABoss>(pAIController->GetPawn());
 		
 		// Only chase if alive
-		if (pBoss->m_fHealth > 0)
+		if (pBoss->GetCombatComponent()->m_fHealth > 0)
 		{
 			// Get location of the player
 			FVector pLocation = pAIController->GetBlackboard()->GetValueAsVector(BossKeys::targetLocation);

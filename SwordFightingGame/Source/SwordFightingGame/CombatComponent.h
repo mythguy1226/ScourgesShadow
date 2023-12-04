@@ -29,6 +29,9 @@ public:
 	UNiagaraSystem* m_pImpactParticle;
 	USoundBase* m_pImpactSound;
 
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
+	float m_fHealth = 100.0f;
+
 	// Called every frame
 	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
 

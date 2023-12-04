@@ -25,6 +25,7 @@ class SWORDFIGHTINGGAME_API ABoss : public ACharacter
 	UWidgetComponent* m_pTargetLockWidget;
 
 	// Combat Component
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
 	UCombatComponent* m_pCombatComponent;
 
 public:
@@ -76,12 +77,15 @@ public:
 	bool m_bInCombat = false;
 	
 	// Combat fields
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
-	float m_fHealth = 300.0f;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	float m_fMaxHealth = 300.0f;
 	float m_fStunMeter = 100.0f;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Death")
 	FVector m_vDeathLocation;
+
+	// Gets combat component
+	UCombatComponent* GetCombatComponent();
 
 	// Combat methods
 	void AttachSword();

@@ -205,16 +205,16 @@ bool ASwordFightingGameCharacter::IsStaggered()
 void ASwordFightingGameCharacter::TakeDamage(float a_fDamage)
 {
 	// If Player already dead or dying then return
-	if (m_fHealth <= 0)
+	if (m_pCombatComponent->m_fHealth <= 0)
 	{
 		return;
 	}
 	
 	// Deal damage
-	m_fHealth -= a_fDamage;
+	m_pCombatComponent->m_fHealth -= a_fDamage;
 
 	// Death Handling
-	if (m_fHealth <= 0)
+	if (m_pCombatComponent->m_fHealth <= 0)
 	{
 		GetMesh()->GetAnimInstance()->Montage_Play(m_pDeathMontage);
 		UGameplayStatics::PlaySoundAtLocation(GetWorld(), m_pDeathSound, GetActorLocation());
