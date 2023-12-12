@@ -57,8 +57,9 @@ ASwordFightingGameCharacter::ASwordFightingGameCharacter()
 	// Note: The skeletal mesh and anim blueprint references on the Mesh component (inherited from Character) 
 	// are set in the derived blueprint asset named ThirdPersonCharacter (to avoid direct content references in C++)
 
-	// Setup the Combat Component
+	// Setup the Combat and Stats Components
 	m_pCombatComponent = CreateDefaultSubobject<UCombatComponent>(TEXT("Combat Component"));
+	m_pStatsComponent = CreateDefaultSubobject<UPlayerStatsComponent>(TEXT("Stats Component"));
 
 
 	SetupStimulus();
@@ -92,17 +93,17 @@ void ASwordFightingGameCharacter::StopBlocking()
 void ASwordFightingGameCharacter::Dodge()
 {
 	// Can't dodge if currently attacking or in the air
-	if (!IsAttacking() && CanJump() && !IsStaggered())
+	if (!m_pCombatComponent->IsAttacking() && CanJump() && !IsStaggered())
 	{
 		// Can't dodge if already dodging
 		if (!m_bIsDodging)
 		{
 			// Manage Stamina
-			if (m_fStamina < 10.0f)
+			if (!m_pStatsComponent->DoesMeetStaminaRequirement(10.0f))
 			{
 				return;
 			}
-			m_fStamina -= 10.0f;
+			m_pStatsComponent->UseStamina(10.0f);
 
 			// Enable dodging boolean
 			m_bIsDodging = true;
@@ -308,17 +309,17 @@ void ASwordFightingGameCharacter::HandleOnMontageNotifyBegin(FName NotifyName, c
 		m_iComboIndex--;
 
 		// Handle stamina
-		if (m_fStamina < 20.0f)
+		if (!m_pStatsComponent->DoesMeetStaminaRequirement(20.0f))
 		{
-			GetMesh()->GetAnimInstance()->Montage_Stop(0.35f, m_pLightAttackMontage);
+			m_pCombatComponent->StopAttack(0.35f, "LightAttack");
 			return;
 		}
 		if(m_iComboIndex >= 0)
-			m_fStamina -= 20;
+			m_pStatsComponent->UseStamina(20.0f);
 
-		if (m_iComboIndex < 0 || m_fStamina < 20.0f)
+		if (m_iComboIndex < 0 || !m_pStatsComponent->DoesMeetStaminaRequirement(20.0f))
 		{
-			GetMesh()->GetAnimInstance()->Montage_Stop(0.35f, m_pLightAttackMontage);
+			m_pCombatComponent->StopAttack(0.35f, "LightAttack");
 		}
 	}
 }
@@ -334,7 +335,7 @@ void ASwordFightingGameCharacter::HandleOnMontageEnd(UAnimMontage* a_pMontage, b
 		// Play the dodge attack if clicked while dodging
 		if (m_bAttackingAfterDodge)
 		{
-			GetMesh()->GetAnimInstance()->Montage_Play(m_pDodgeAttackMontage);
+			m_pCombatComponent->Attack("DodgeAttack");
 			m_bCanAttackAfterDodge = false;
 			m_bAttackingAfterDodge = false;
 		}
@@ -386,7 +387,7 @@ void ASwordFightingGameCharacter::LightAttack()
 
 	// Light Attack Logic
 	m_bIsCharging = false;
-	if (!IsAttacking() && CanJump())
+	if (!m_pCombatComponent->IsAttacking() && CanJump())
 	{
 		// If they aren't charged or didn't just heavy attack, play a light attack
 		if (!m_bIsCharged)
@@ -395,13 +396,13 @@ void ASwordFightingGameCharacter::LightAttack()
 			if (m_bIsSprinting)
 			{
 				// Handle stamina
-				if (m_fStamina < 20.0f)
+				if (!m_pStatsComponent->DoesMeetStaminaRequirement(20.0f))
 				{
 					return;
 				}
-				m_fStamina -= 20.0f;
+				m_pStatsComponent->UseStamina(20.0f);
 
-				GetMesh()->GetAnimInstance()->Montage_Play(m_pSprintAttackMontage);
+				m_pCombatComponent->Attack("SprintAttack");
 			}
 			else
 			{
@@ -409,25 +410,25 @@ void ASwordFightingGameCharacter::LightAttack()
 				if (m_bCanAttackAfterDodge)
 				{
 					// Handle stamina
-					if (m_fStamina < 20.0f)
+					if (!m_pStatsComponent->DoesMeetStaminaRequirement(20.0f))
 					{
 						return;
 					}
-					m_fStamina -= 20.0f;
+					m_pStatsComponent->UseStamina(20.0f);
 
-					GetMesh()->GetAnimInstance()->Montage_Play(m_pDodgeAttackMontage);
+					m_pCombatComponent->Attack("DodgeAttack");
 					m_bCanAttackAfterDodge = false;
 				}
 				else
 				{
 					// Handle stamina
-					if (m_fStamina < 20.0f)
+					if (!m_pStatsComponent->DoesMeetStaminaRequirement(20.0f))
 					{
 						return;
 					}
-					m_fStamina -= 20.0f;
+					m_pStatsComponent->UseStamina(20.0f);
 
-					GetMesh()->GetAnimInstance()->Montage_Play(m_pLightAttackMontage);
+					m_pCombatComponent->Attack("LightAttack");
 				}
 			}
 		}
@@ -444,12 +445,6 @@ void ASwordFightingGameCharacter::LightAttack()
 
 void ASwordFightingGameCharacter::HeavyAttack()
 {
-	// Return if staggered
-	if (IsStaggered())
-	{
-		return;
-	}
-
 	// Ground-Attacks
 	if (CanJump())
 	{
@@ -466,13 +461,13 @@ void ASwordFightingGameCharacter::HeavyAttack()
 					if (m_bIsCharging)
 					{
 						// Handle stamina
-						if (m_fStamina < 30.0f)
+						if (!m_pStatsComponent->DoesMeetStaminaRequirement(30.0f))
 						{
 							return;
 						}
-						m_fStamina -= 30.0f;
+						m_pStatsComponent->UseStamina(30.0f);
 
-						GetMesh()->GetAnimInstance()->Montage_Play(m_pHeavyAttackMontage);
+						m_pCombatComponent->Attack("HeavyAttack");
 						m_bIsCharging = false;
 						m_bIsCharged = true;
 					}
@@ -483,28 +478,14 @@ void ASwordFightingGameCharacter::HeavyAttack()
 	else // Jump Attacking (In Mid-Air)
 	{
 		// Handle stamina
-		if (m_fStamina < 20.0f)
+		if (!m_pStatsComponent->DoesMeetStaminaRequirement(20.0f))
 		{
 			return;
 		}
-		m_fStamina -= 20.0f;
+		m_pStatsComponent->UseStamina(20.0f);
 
-		GetMesh()->GetAnimInstance()->Montage_Play(m_pJumpAttackMontage);
+		m_pCombatComponent->Attack("JumpAttack");
 	}
-}
-
-bool ASwordFightingGameCharacter::IsAttacking()
-{
-	// Return true if any attack montage is playing
-	UAnimInstance* pAnimInst = GetMesh()->GetAnimInstance();
-	if (pAnimInst != nullptr)
-	{
-		if (pAnimInst->Montage_IsPlaying(m_pLightAttackMontage) || pAnimInst->Montage_IsPlaying(m_pHeavyAttackMontage))
-		{
-			return true;
-		}
-	}
-	return false;
 }
 
 void ASwordFightingGameCharacter::TurnAtRate(float Rate)
@@ -563,18 +544,11 @@ void ASwordFightingGameCharacter::Tick(float a_fDeltaTime)
 		SetActorRotation(ActorRot);
 	}
 
-	// Slowly Regenerate Stamina
-	m_fStamina += 0.07f;
-
-	// Cap the stamina at 100
-	if (m_fStamina > 100.0f)
-		m_fStamina = 100.0f;
-
 	// Handle Sprinting and Stamina
 	if (m_bIsSprinting)
 	{
-		m_fStamina -= 0.15f;
-		if (m_fStamina < 1.0f)
+		m_pStatsComponent->UseStamina(.15f);
+		if (!m_pStatsComponent->DoesMeetStaminaRequirement(1.0f))
 		{
 			StopSprinting();
 		}
@@ -584,7 +558,7 @@ void ASwordFightingGameCharacter::Tick(float a_fDeltaTime)
 
 void ASwordFightingGameCharacter::MoveForward(float Value)
 {
-	if (!IsAttacking() && !m_bIsBlocking && !IsStaggered() && !IsDying())
+	if (!m_pCombatComponent->IsAttacking() && !m_bIsBlocking && !IsStaggered() && !IsDying())
 	{
 		if ((Controller != nullptr) && (Value != 0.0f))
 		{
@@ -601,7 +575,7 @@ void ASwordFightingGameCharacter::MoveForward(float Value)
 
 void ASwordFightingGameCharacter::MoveRight(float Value)
 {
-	if (!IsAttacking() && !m_bIsBlocking && !IsStaggered() && !IsDying())
+	if (!m_pCombatComponent->IsAttacking() && !m_bIsBlocking && !IsStaggered() && !IsDying())
 	{
 		if ((Controller != nullptr) && (Value != 0.0f))
 		{
@@ -620,7 +594,7 @@ void ASwordFightingGameCharacter::MoveRight(float Value)
 void ASwordFightingGameCharacter::Jump()
 {
 	// Can't jump if currently attacking
-	if (!IsAttacking() && !IsDying() && !IsStaggered())
+	if (!m_pCombatComponent->IsAttacking() && !IsDying() && !IsStaggered())
 	{
 		// Super call to ACharacter Jump
 		Super::Jump();

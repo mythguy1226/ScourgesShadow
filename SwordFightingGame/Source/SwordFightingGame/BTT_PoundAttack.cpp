@@ -18,7 +18,7 @@ EBTNodeResult::Type UBTT_PoundAttack::ExecuteTask(UBehaviorTreeComponent& a_pTre
 	ABoss* pBoss = Cast<ABoss>(pAIController->GetPawn());
 
 	// Check if KickAttack montage is finished
-	if (AttackMontageFinished(pBoss))
+	if (!pBoss->GetCombatComponent()->IsAttacking())
 	{
 		// Get bool value from key to check whether we can KickAttack
 		bool bCanKickAttack = pAIController->GetBlackboard()->GetValueAsBool(BossKeys::isPlayerInRange);
@@ -35,13 +35,3 @@ EBTNodeResult::Type UBTT_PoundAttack::ExecuteTask(UBehaviorTreeComponent& a_pTre
 	return EBTNodeResult::Succeeded;
 }
 
-bool UBTT_PoundAttack::AttackMontageFinished(ABoss* a_pBoss)
-{
-	// Get the anim instance
-	UAnimInstance* pAnimInstance = a_pBoss->GetMesh()->GetAnimInstance();
-	if (pAnimInstance != nullptr)
-	{
-		return pAnimInstance->Montage_GetIsStopped(a_pBoss->m_pKickAttackMontage) && pAnimInstance->Montage_GetIsStopped(a_pBoss->m_pSlashAttackMontage) && pAnimInstance->Montage_GetIsStopped(a_pBoss->m_pPoundAttackMontage);
-	}
-	return false;
-}

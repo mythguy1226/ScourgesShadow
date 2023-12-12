@@ -64,4 +64,7 @@ void UANS_SlashWindow::NotifyEnd(USkeletalMeshComponent* MeshComp, UAnimSequence
 	// Generate the hit capsule 
 	if (m_bContinuousTracing)
 		combatComp->GenerateHitCapsule(vSlashBegin, vSlashEnd, m_fRadius, m_fDamage, m_bDebugMode, m_bKnockback);
+
+	// Clear set of damaged actors
+	combatComp->m_sDamagedActors.Empty();
 }

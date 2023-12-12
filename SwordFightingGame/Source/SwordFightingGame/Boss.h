@@ -43,26 +43,7 @@ public:
 	// Called to bind functionality to input
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
 
-	// References to montages
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Animation")
-	UAnimMontage* m_pSlashAttackMontage;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Animation")
-	UAnimMontage* m_pKickAttackMontage;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Animation")
-	UAnimMontage* m_pPoundAttackMontage;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Animation")
-	UAnimMontage* m_pDeathMontage;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Animation")
-	UAnimMontage* m_pHurtMontage;
-
 	// References to sounds
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Sound")
-	TArray<USoundBase*> m_pAttackSounds;
-
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Sound")
 	TArray<USoundBase*> m_pDeathSounds;
 
@@ -78,7 +59,6 @@ public:
 	
 	// Combat fields
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	float m_fMaxHealth = 300.0f;
 	float m_fStunMeter = 100.0f;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Death")

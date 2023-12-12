@@ -19,7 +19,9 @@ UCombatComponent::UCombatComponent()
 void UCombatComponent::BeginPlay()
 {
 	Super::BeginPlay();
-	
+
+	// Set health to its max
+	m_fHealth = m_fMaxHealth;
 }
 
 
@@ -65,6 +67,12 @@ void UCombatComponent::GenerateHitSphere(FVector a_vLocation, float a_fRadius, f
 		// Iterate through the hit results
 		for (auto i = outHits.CreateIterator(); i; i++)
 		{
+			// Check if actor is part of damaged actor set
+			if (m_sDamagedActors.Contains(i->GetActor()))
+				continue;
+			else // Add to set if not
+				m_sDamagedActors.Add(i->GetActor());
+
 			// Try to cast to a boss
 			ABoss* pBoss = Cast<ABoss>(i->GetActor());
 			if (pBoss) // Continue if valid
@@ -119,6 +127,13 @@ void UCombatComponent::GenerateHitCapsule(FVector a_vBeginLoc, FVector a_vEndLoc
 		// Iterate through the hit results
 		for (auto i = outHits.CreateIterator(); i; i++)
 		{
+			// Check if actor is part of damaged actor set
+			if (m_sDamagedActors.Contains(i->GetActor()))
+				continue;
+			else // Add to set if not
+				m_sDamagedActors.Add(i->GetActor());
+
+
 			// Try to cast to a boss
 			ABoss* pBoss = Cast<ABoss>(i->GetActor());
 			if (pBoss) // Continue if valid
@@ -152,13 +167,13 @@ void UCombatComponent::HandleBossDamage(ABoss* a_pBoss, FVector a_vLoc, float a_
 		UGameplayStatics::PlaySoundAtLocation(GetWorld(), m_pImpactSound, GetOwner()->GetActorLocation());
 
 	// Handle stun meter
-	if (a_pBoss->m_pHurtMontage != nullptr)
+	if (m_pHurtMontage != nullptr)
 	{
 		// Deplete stun meter
 		a_pBoss->m_fStunMeter -= 15.0f;
 		if (a_pBoss->m_fStunMeter <= 0.0f) // Stun the boss
 		{
-			a_pBoss->GetMesh()->GetAnimInstance()->Montage_Play(a_pBoss->m_pHurtMontage);
+			a_pBoss->GetMesh()->GetAnimInstance()->Montage_Play(m_pHurtMontage);
 			a_pBoss->m_fStunMeter = 100.0f;
 		}
 	}
@@ -219,5 +234,97 @@ void UCombatComponent::HandlePlayerDamage(ASwordFightingGameCharacter* a_pPlayer
 			}
 		}
 	}
+}
+
+void UCombatComponent::Attack(FString a_sAttackName)
+{
+	// Check if actor is alive
+	if (m_fHealth <= 0.0f)
+		return;
+
+	// Check if actor is staggered
+	if (IsStaggered())
+		return;
+	
+	// Check if map has elements
+	if (m_mAttackMap.Num() == 0)
+		return;
+
+	// Get owner of component and then get their animator
+	UAnimInstance* pAnimInst = Cast<ACharacter>(GetOwner())->GetMesh()->GetAnimInstance();
+
+	// Return early if the anim instance wasn't found
+	if (!pAnimInst)
+		return;
+
+	// Get the anim montage to play
+	UAnimMontage** pAttack = m_mAttackMap.Find(a_sAttackName);
+
+	// Play the attack if valid
+	if (pAttack)
+		pAnimInst->Montage_Play(*pAttack);
+}
+
+void UCombatComponent::StopAttack(float a_fBlendOutTime, FString a_sAttackName)
+{
+	// Check if map has elements
+	if (m_mAttackMap.Num() == 0)
+		return;
+
+	// Get owner of component and then get their animator
+	UAnimInstance* pAnimInst = Cast<ACharacter>(GetOwner())->GetMesh()->GetAnimInstance();
+
+	// Return early if the anim instance wasn't found
+	if (!pAnimInst)
+		return;
+
+	// Get the anim montage to play
+	UAnimMontage** pAttack = m_mAttackMap.Find(a_sAttackName);
+
+	// Play the attack if valid
+	if (pAttack)
+		pAnimInst->Montage_Stop(a_fBlendOutTime, *pAttack);
+}
+
+// Returns whether or not actor is attacking
+bool UCombatComponent::IsAttacking()
+{
+	// Check if map has elements
+	if (m_mAttackMap.Num() == 0)
+		return false;
+
+	// Get owner of component and then get their animator
+	UAnimInstance* pAnimInst = Cast<ACharacter>(GetOwner())->GetMesh()->GetAnimInstance();
+
+	// Return early if the anim instance wasn't found
+	if (!pAnimInst)
+		return false;
+
+	// Get map keys
+	TArray<FString> aKeys;
+	m_mAttackMap.GetKeys(aKeys);
+
+	// Check all attacks to see if any of them are currently playing
+	for (int i = 0; i < aKeys.Num(); i++)
+	{
+		// Return when you find an attack playing
+		if (pAnimInst->Montage_IsPlaying(*m_mAttackMap.Find(aKeys[i])))
+			return true;
+	}
+
+	return false;
+}
+
+bool UCombatComponent::IsStaggered()
+{
+	// Get owner of component and then get their animator
+	UAnimInstance* pAnimInst = Cast<ACharacter>(GetOwner())->GetMesh()->GetAnimInstance();
+
+	// Return early if the anim instance wasn't found
+	if (!pAnimInst)
+		return false;
+
+	// Check if any stagger animations are playing
+	return pAnimInst->Montage_IsPlaying(m_pHurtMontage);
 }
 

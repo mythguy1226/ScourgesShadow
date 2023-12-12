@@ -36,9 +36,6 @@ void ABoss::BeginPlay()
 
 	// Attach the sword to the boss 
 	AttachSword();
-
-	// Set health to the max health
-	m_pCombatComponent->m_fHealth = m_fMaxHealth;
 }
 
 // Called every frame
@@ -93,65 +90,20 @@ void ABoss::AttachSword()
 
 void ABoss::SlashAttack()
 {
-	UAnimInstance* pAnimInstance = GetMesh()->GetAnimInstance();
-	if (pAnimInstance != nullptr)
-	{
-		// Can't attack when staggered
-		if (pAnimInstance->Montage_IsPlaying(m_pHurtMontage) || m_pCombatComponent->m_fHealth <= 0.0f)
-		{
-			return;
-		}
-
-		// Play attack montage
-		if (m_pSlashAttackMontage != nullptr)
-		{
-			pAnimInstance->Montage_Play(m_pSlashAttackMontage);
-
-			// Play attack sounds
-			if (m_pAttackSounds.Num() > 0)
-			{
-				UGameplayStatics::PlaySoundAtLocation(GetWorld(), m_pAttackSounds[FMath::RandRange(0, m_pAttackSounds.Num() - 1)], GetActorLocation());
-			}
-		}
-	}
+	// Play attack montage
+	m_pCombatComponent->Attack("SlashAttack");
 }
 
 void ABoss::KickAttack()
 {
-	UAnimInstance* pAnimInstance = GetMesh()->GetAnimInstance();
-	if (pAnimInstance != nullptr)
-	{
-		// Can't attack when staggered
-		if (pAnimInstance->Montage_IsPlaying(m_pHurtMontage) || m_pCombatComponent->m_fHealth <= 0.0f)
-		{
-			return;
-		}
-
-		// Play attack montage
-		if (m_pKickAttackMontage != nullptr)
-		{
-			pAnimInstance->Montage_Play(m_pKickAttackMontage);
-		}
-	}
+	// Play attack montage
+	m_pCombatComponent->Attack("KickAttack");
 }
 
 void ABoss::PoundAttack()
 {
-	UAnimInstance* pAnimInstance = GetMesh()->GetAnimInstance();
-	if (pAnimInstance != nullptr)
-	{
-		// Can't attack when staggered
-		if (pAnimInstance->Montage_IsPlaying(m_pHurtMontage) || m_pCombatComponent->m_fHealth <= 0.0f)
-		{
-			return;
-		}
-
-		// Play attack montage
-		if (m_pPoundAttackMontage != nullptr)
-		{
-			pAnimInstance->Montage_Play(m_pPoundAttackMontage);
-		}
-	}
+	// Play attack montage
+	m_pCombatComponent->Attack("PoundAttack");
 }
 
 void ABoss::TakeDamage(float a_fDamage)
@@ -160,7 +112,7 @@ void ABoss::TakeDamage(float a_fDamage)
 	UAnimInstance* pAnimInstance = GetMesh()->GetAnimInstance();
 	if (pAnimInstance != nullptr)
 	{
-		if (pAnimInstance->Montage_IsPlaying(m_pDeathMontage))
+		if (pAnimInstance->Montage_IsPlaying(m_pCombatComponent->m_pDeathMontage))
 		{
 			return;
 		}
@@ -194,9 +146,9 @@ void ABoss::Die()
 	UAnimInstance* pAnimInstance = GetMesh()->GetAnimInstance();
 	if (pAnimInstance != nullptr)
 	{
-		if (m_pDeathMontage != nullptr)
+		if (m_pCombatComponent->m_pDeathMontage != nullptr)
 		{
-			pAnimInstance->Montage_Play(m_pDeathMontage);
+			pAnimInstance->Montage_Play(m_pCombatComponent->m_pDeathMontage);
 		}
 	}
 

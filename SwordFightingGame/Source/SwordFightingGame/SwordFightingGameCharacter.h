@@ -7,6 +7,7 @@
 #include "Boss.h"
 #include "NiagaraFunctionLibrary.h"
 #include "CombatComponent.h"
+#include "PlayerStatsComponent.h"
 #include "SwordFightingGameCharacter.generated.h"
 
 UCLASS(config=Game)
@@ -25,6 +26,10 @@ class ASwordFightingGameCharacter : public ACharacter
 	// Combat Component
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
 	UCombatComponent* m_pCombatComponent;
+
+	// Stats Component
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
+	UPlayerStatsComponent* m_pStatsComponent;
 
 	// Reference to HUD class
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "UserInterface", meta = (AllowPrivateAccess = "true"))
@@ -52,21 +57,6 @@ public:
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Animation")
 	UAnimMontage* m_pFallDodgeMontage;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Animation")
-	UAnimMontage* m_pLightAttackMontage;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Animation")
-	UAnimMontage* m_pHeavyAttackMontage;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Animation")
-	UAnimMontage* m_pSprintAttackMontage;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Animation")
-	UAnimMontage* m_pJumpAttackMontage;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Animation")
-	UAnimMontage* m_pDodgeAttackMontage;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Animation")
 	UAnimMontage* m_pHurtMontage;
@@ -129,7 +119,6 @@ public:
 	void HeavyAttack();
 
 	// Method for getting whether player is attacking
-	bool IsAttacking();
 	int m_iComboIndex = 0;
 	bool m_bIsCharging = false;
 	bool m_bIsCharged = false;
@@ -164,10 +153,6 @@ public:
 	bool IsStaggered();
 	void TakeDamage(float a_fDamage);
 	bool IsDying();
-
-	// *** Stamina ***
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
-	float m_fStamina = 100.0f;
 
 protected:
 	// Called upon begin of play
