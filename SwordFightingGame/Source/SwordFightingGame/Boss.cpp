@@ -23,6 +23,7 @@ ABoss::ABoss()
 
 	// Set up the combat component
 	m_pCombatComponent = CreateDefaultSubobject<UCombatComponent>(TEXT("Combat Component"));
+	m_pStatsComponent = CreateDefaultSubobject<UBossStatsComponent>(TEXT("Stats Component"));
 }
 
 // Called when the game starts or when spawned
@@ -62,6 +63,11 @@ void ABoss::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
 UCombatComponent* ABoss::GetCombatComponent()
 {
 	return m_pCombatComponent;
+}
+
+UBossStatsComponent* ABoss::GetStatsComponenet()
+{
+	return m_pStatsComponent;
 }
 
 void ABoss::AttachSword()

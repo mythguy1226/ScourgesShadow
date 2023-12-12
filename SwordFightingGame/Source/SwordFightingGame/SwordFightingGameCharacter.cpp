@@ -59,6 +59,8 @@ ASwordFightingGameCharacter::ASwordFightingGameCharacter()
 
 	// Setup the Combat and Stats Components
 	m_pCombatComponent = CreateDefaultSubobject<UCombatComponent>(TEXT("Combat Component"));
+	m_pCombatComponent->m_bCanBeKnockedDown = true;
+
 	m_pStatsComponent = CreateDefaultSubobject<UPlayerStatsComponent>(TEXT("Stats Component"));
 
 
@@ -93,7 +95,7 @@ void ASwordFightingGameCharacter::StopBlocking()
 void ASwordFightingGameCharacter::Dodge()
 {
 	// Can't dodge if currently attacking or in the air
-	if (!m_pCombatComponent->IsAttacking() && CanJump() && !IsStaggered())
+	if (!m_pCombatComponent->IsAttacking() && CanJump() && !m_pCombatComponent->IsStaggered())
 	{
 		// Can't dodge if already dodging
 		if (!m_bIsDodging)
@@ -191,18 +193,6 @@ void ASwordFightingGameCharacter::ToggleTargetLock()
 	}
 }
 
-bool ASwordFightingGameCharacter::IsStaggered()
-{
-	// Get anim instance
-	UAnimInstance* pAnimInst = GetMesh()->GetAnimInstance();
-	if (pAnimInst)
-	{
-		// Return status of stagger position
-		return pAnimInst->Montage_IsPlaying(m_pHurtMontage) || pAnimInst->Montage_IsPlaying(m_pKnockbackMontage) || pAnimInst->Montage_IsPlaying(m_pGetUpMontage);
-	}
-	return false;
-}
-
 void ASwordFightingGameCharacter::TakeDamage(float a_fDamage)
 {
 	// If Player already dead or dying then return
@@ -279,7 +269,7 @@ void ASwordFightingGameCharacter::HandleOnMontageNotifyBegin(FName NotifyName, c
 	else if (NotifyName.ToString() == "GetUp")
 	{
 		// Handle Getting up
-		GetMesh()->GetAnimInstance()->Montage_Play(m_pGetUpMontage);
+		GetMesh()->GetAnimInstance()->Montage_Play(m_pCombatComponent->m_pGetUpMontage);
 	}
 	else if (NotifyName.ToString() == "Death")
 	{
@@ -373,12 +363,6 @@ void ASwordFightingGameCharacter::TouchStopped(ETouchIndex::Type FingerIndex, FV
 
 void ASwordFightingGameCharacter::LightAttack()
 {
-	// Return if staggered
-	if (IsStaggered())
-	{
-		return;
-	}
-
 	// Check for attack clicks while dodging
 	if (m_bIsDodging)
 	{
@@ -558,7 +542,7 @@ void ASwordFightingGameCharacter::Tick(float a_fDeltaTime)
 
 void ASwordFightingGameCharacter::MoveForward(float Value)
 {
-	if (!m_pCombatComponent->IsAttacking() && !m_bIsBlocking && !IsStaggered() && !IsDying())
+	if (!m_pCombatComponent->IsAttacking() && !m_bIsBlocking && !m_pCombatComponent->IsStaggered() && !IsDying())
 	{
 		if ((Controller != nullptr) && (Value != 0.0f))
 		{
@@ -575,7 +559,7 @@ void ASwordFightingGameCharacter::MoveForward(float Value)
 
 void ASwordFightingGameCharacter::MoveRight(float Value)
 {
-	if (!m_pCombatComponent->IsAttacking() && !m_bIsBlocking && !IsStaggered() && !IsDying())
+	if (!m_pCombatComponent->IsAttacking() && !m_bIsBlocking && !m_pCombatComponent->IsStaggered() && !IsDying())
 	{
 		if ((Controller != nullptr) && (Value != 0.0f))
 		{
@@ -594,7 +578,7 @@ void ASwordFightingGameCharacter::MoveRight(float Value)
 void ASwordFightingGameCharacter::Jump()
 {
 	// Can't jump if currently attacking
-	if (!m_pCombatComponent->IsAttacking() && !IsDying() && !IsStaggered())
+	if (!m_pCombatComponent->IsAttacking() && !IsDying() && !m_pCombatComponent->IsStaggered())
 	{
 		// Super call to ACharacter Jump
 		Super::Jump();

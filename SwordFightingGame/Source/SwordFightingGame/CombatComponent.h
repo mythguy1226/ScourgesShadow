@@ -63,8 +63,17 @@ public:
 	UAnimMontage* m_pHurtMontage;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	UAnimMontage* m_pKnockbackMontage;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	UAnimMontage* m_pGetUpMontage;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	UAnimMontage* m_pDeathMontage;
 
 	// Method for checking if staggered
 	bool IsStaggered();
+
+	// Indicates whether actor is able to be knocked down
+	bool m_bCanBeKnockedDown = false;
 };

@@ -43,20 +43,6 @@ void AHurtBox::Tick(float DeltaTime)
 
 void AHurtBox::OnCapsuleBeginOverlap(UPrimitiveComponent* a_pOverlappedComponent, AActor* a_pOtherActor, UPrimitiveComponent* a_pOtherComp, int32 a_iOtherBodyIndex, bool a_bFromSweep, const FHitResult& a_pSweepResult)
 {
-	// Check if hurt box is hitting the player
-	ASwordFightingGameCharacter* pPlayer = Cast<ASwordFightingGameCharacter>(a_pOtherActor);
-	if (pPlayer) // Continue if valid
-	{
-		// Don't deal damage if player is dodging
-		if (!pPlayer->m_bIsDodging)
-		{
-			// Play hurt animation and deal damage
-			if (pPlayer->m_pHurtMontage != nullptr)
-			{
-				pPlayer->GetMesh()->GetAnimInstance()->Montage_Play(pPlayer->m_pHurtMontage);
-				pPlayer->TakeDamage(10.0f);
-			}
-		}
-	}
+
 }
 

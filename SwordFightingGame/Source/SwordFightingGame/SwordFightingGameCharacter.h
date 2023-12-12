@@ -59,15 +59,6 @@ public:
 	UAnimMontage* m_pFallDodgeMontage;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Animation")
-	UAnimMontage* m_pHurtMontage;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Animation")
-	UAnimMontage* m_pKnockbackMontage;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Animation")
-	UAnimMontage* m_pGetUpMontage;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Animation")
 	UAnimMontage* m_pShieldImpactMontage;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Animation")
@@ -150,7 +141,6 @@ public:
 	bool m_bIsTargetLocked = false;
 
 	// *** Handle Damage and Staggering ***
-	bool IsStaggered();
 	void TakeDamage(float a_fDamage);
 	bool IsDying();
 

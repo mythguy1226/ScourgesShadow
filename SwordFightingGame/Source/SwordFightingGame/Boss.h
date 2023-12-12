@@ -7,6 +7,7 @@
 #include "MoltenSword.h"
 #include "Components/WidgetComponent.h"
 #include "CombatComponent.h"
+#include "BossStatsComponent.h"
 #include "Boss.generated.h"
 
 UCLASS()
@@ -27,6 +28,10 @@ class SWORDFIGHTINGGAME_API ABoss : public ACharacter
 	// Combat Component
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
 	UCombatComponent* m_pCombatComponent;
+
+	// Stats Component
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
+	UBossStatsComponent* m_pStatsComponent;
 
 public:
 	// Sets default values for this character's properties
@@ -56,16 +61,15 @@ public:
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
 	bool m_bInCombat = false;
-	
-	// Combat fields
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	float m_fStunMeter = 100.0f;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Death")
 	FVector m_vDeathLocation;
 
 	// Gets combat component
 	UCombatComponent* GetCombatComponent();
+
+	// Gets stat component
+	UBossStatsComponent* GetStatsComponenet();
 
 	// Combat methods
 	void AttachSword();

@@ -166,15 +166,22 @@ void UCombatComponent::HandleBossDamage(ABoss* a_pBoss, FVector a_vLoc, float a_
 	if (m_pImpactSound != nullptr)
 		UGameplayStatics::PlaySoundAtLocation(GetWorld(), m_pImpactSound, GetOwner()->GetActorLocation());
 
+	// Get player's combat componenet
+	UCombatComponent* bossCombatComp = Cast<UCombatComponent>(a_pBoss->GetComponentByClass(UCombatComponent::StaticClass()));
+
+	// Return early if invalid
+	if (!bossCombatComp)
+		return;
+
 	// Handle stun meter
-	if (m_pHurtMontage != nullptr)
+	if (bossCombatComp->m_pHurtMontage != nullptr)
 	{
 		// Deplete stun meter
-		a_pBoss->m_fStunMeter -= 15.0f;
-		if (a_pBoss->m_fStunMeter <= 0.0f) // Stun the boss
+		a_pBoss->GetStatsComponenet()->DecrementStun(15.0f);
+		if (a_pBoss->GetStatsComponenet()->IsStunMeterEmpty()) // Stun the boss
 		{
-			a_pBoss->GetMesh()->GetAnimInstance()->Montage_Play(m_pHurtMontage);
-			a_pBoss->m_fStunMeter = 100.0f;
+			a_pBoss->GetMesh()->GetAnimInstance()->Montage_Play(bossCombatComp->m_pHurtMontage);
+			a_pBoss->GetStatsComponenet()->ResetStunMeter();
 		}
 	}
 }
@@ -187,11 +194,18 @@ void UCombatComponent::HandlePlayerDamage(ASwordFightingGameCharacter* a_pPlayer
 		return;
 	}
 
-	// Don't deal damage if player is dodging
-	if (!a_pPlayer->m_bIsDodging && !a_pPlayer->IsStaggered() && !a_pPlayer->IsDying())
+	// Don't deal damage if player is dodging, staggered, or already dying
+	if (!a_pPlayer->m_bIsDodging && !IsStaggered() && !a_pPlayer->IsDying())
 	{
+		// Get player's combat componenet
+		UCombatComponent* playerCombatComp = Cast<UCombatComponent>(a_pPlayer->GetComponentByClass(UCombatComponent::StaticClass()));
+
+		// Return early if invalid
+		if (!playerCombatComp)
+			return;
+
 		// Play hurt animation and deal damage
-		if (a_pPlayer->m_pHurtMontage != nullptr && !a_bKnockback)
+		if (m_pHurtMontage != nullptr && !a_bKnockback)
 		{
 			// If player isn't block do normal damage
 			if (!a_pPlayer->m_bIsBlocking)
@@ -200,7 +214,7 @@ void UCombatComponent::HandlePlayerDamage(ASwordFightingGameCharacter* a_pPlayer
 				if (a_pPlayer->m_pHurtSound != nullptr)
 					UGameplayStatics::PlaySoundAtLocation(GetWorld(), a_pPlayer->m_pHurtSound, GetOwner()->GetActorLocation());
 
-				a_pPlayer->GetMesh()->GetAnimInstance()->Montage_Play(a_pPlayer->m_pHurtMontage);
+				a_pPlayer->GetMesh()->GetAnimInstance()->Montage_Play(playerCombatComp->m_pHurtMontage);
 				a_pPlayer->TakeDamage(a_fDamage);
 			}
 			else // Otherwise negate some damage
@@ -225,11 +239,11 @@ void UCombatComponent::HandlePlayerDamage(ASwordFightingGameCharacter* a_pPlayer
 			if (a_pPlayer->m_pKnockbackSound != nullptr)
 				UGameplayStatics::PlaySoundAtLocation(GetWorld(), a_pPlayer->m_pKnockbackSound, a_pPlayer->GetActorLocation());
 
-			if (!a_pPlayer->GetMesh()->GetAnimInstance()->Montage_IsPlaying(a_pPlayer->m_pKnockbackMontage))
+			if (!a_pPlayer->GetMesh()->GetAnimInstance()->Montage_IsPlaying(playerCombatComp->m_pKnockbackMontage))
 			{
 				FVector playerToEnemy = a_pPlayer->GetActorLocation() - GetOwner()->GetActorLocation();
 				a_pPlayer->LaunchCharacter(playerToEnemy * 30, true, true);
-				a_pPlayer->GetMesh()->GetAnimInstance()->Montage_Play(a_pPlayer->m_pKnockbackMontage);
+				a_pPlayer->GetMesh()->GetAnimInstance()->Montage_Play(playerCombatComp->m_pKnockbackMontage);
 				a_pPlayer->TakeDamage(a_fDamage);
 			}
 		}
@@ -323,6 +337,10 @@ bool UCombatComponent::IsStaggered()
 	// Return early if the anim instance wasn't found
 	if (!pAnimInst)
 		return false;
+
+	// Check knockback animations if able
+	if(m_bCanBeKnockedDown)
+		return pAnimInst->Montage_IsPlaying(m_pHurtMontage) || pAnimInst->Montage_IsPlaying(m_pKnockbackMontage) || pAnimInst->Montage_IsPlaying(m_pGetUpMontage);
 
 	// Check if any stagger animations are playing
 	return pAnimInst->Montage_IsPlaying(m_pHurtMontage);
