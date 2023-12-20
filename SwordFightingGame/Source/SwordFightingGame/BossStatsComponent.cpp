@@ -2,6 +2,7 @@
 
 
 #include "BossStatsComponent.h"
+#include "Boss.h"
 
 // Sets default values for this component's properties
 UBossStatsComponent::UBossStatsComponent()
@@ -18,10 +19,6 @@ UBossStatsComponent::UBossStatsComponent()
 void UBossStatsComponent::BeginPlay()
 {
 	Super::BeginPlay();
-
-	// Fill up the stun meter
-	m_fStunMeter = m_fMaxStunResistance;
-	
 }
 
 
@@ -31,23 +28,5 @@ void UBossStatsComponent::TickComponent(float DeltaTime, ELevelTick TickType, FA
 	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
 
 	// ...
-}
-
-// Method for decrementing stun meter
-void UBossStatsComponent::DecrementStun(float a_fStunAmount)
-{
-	m_fStunMeter -= a_fStunAmount;
-}
-
-// Method for resetting stun meter back to max
-void UBossStatsComponent::ResetStunMeter()
-{
-	m_fStunMeter = m_fMaxStunResistance;
-}
-
-// Method for checking if stun meter is empty
-bool UBossStatsComponent::IsStunMeterEmpty()
-{
-	return m_fStunMeter <= 0.0f;
 }
 

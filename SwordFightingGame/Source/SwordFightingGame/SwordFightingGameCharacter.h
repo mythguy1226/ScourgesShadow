@@ -8,6 +8,7 @@
 #include "NiagaraFunctionLibrary.h"
 #include "CombatComponent.h"
 #include "PlayerStatsComponent.h"
+#include "EvasionComponent.h"
 #include "SwordFightingGameCharacter.generated.h"
 
 UCLASS(config=Game)
@@ -31,6 +32,10 @@ class ASwordFightingGameCharacter : public ACharacter
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
 	UPlayerStatsComponent* m_pStatsComponent;
 
+	// Evasion Component
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
+	UEvasionComponent* m_pEvasionComponent;
+
 	// Reference to HUD class
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "UserInterface", meta = (AllowPrivateAccess = "true"))
 	TSubclassOf<class UUserWidget> m_cPlayerHUD;
@@ -52,56 +57,7 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Animation")
 	UAnimMontage* m_pDeathMontage;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Animation")
-	UAnimMontage* m_pDodgeMontage;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Animation")
-	UAnimMontage* m_pFallDodgeMontage;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Animation")
-	UAnimMontage* m_pShieldImpactMontage;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Animation")
-	UAnimMontage* m_pLockDodgeForwardMontage;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Animation")
-	UAnimMontage* m_pLockDodgeRightMontage;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Animation")
-	UAnimMontage* m_pLockDodgeLeftMontage;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Animation")
-	UAnimMontage* m_pLockDodgeBackMontage;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Animation")
-	UAnimMontage* m_pLockDodgeForwardLMontage;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Animation")
-	UAnimMontage* m_pLockDodgeForwardRMontage;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Animation")
-	UAnimMontage* m_pLockDodgeBackLMontage;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Animation")
-	UAnimMontage* m_pLockDodgeBackRMontage;
-
-	// Particle Systems
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "FX")
-	UNiagaraSystem* m_pBloodParticle;
-
 	// Sounds
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Sound")
-	USoundBase* m_pSlashImpactSound;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Sound")
-	USoundBase* m_pKnockbackSound;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Sound")
-	USoundBase* m_pHurtSound;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Sound")
-	USoundBase* m_pBlockSound;
-
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Sound")
 	USoundBase* m_pDeathSound;
 
@@ -124,15 +80,9 @@ public:
 	// Methods for Block Handling
 	void Block();
 	void StopBlocking();
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
-		bool m_bIsBlocking = false;
 
 	// *** Handle Dodging ***
 	void Dodge();
-	bool m_bIsDodging = false;
-	bool m_bCanAttackAfterDodge = false;
-	bool m_bAttackingAfterDodge = false;
-	FVector dodgeDir;
 
 	// *** Handle Target Locking ***
 	void ToggleTargetLock();

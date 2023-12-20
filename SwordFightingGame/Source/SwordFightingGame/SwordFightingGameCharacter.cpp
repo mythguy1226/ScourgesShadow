@@ -57,12 +57,13 @@ ASwordFightingGameCharacter::ASwordFightingGameCharacter()
 	// Note: The skeletal mesh and anim blueprint references on the Mesh component (inherited from Character) 
 	// are set in the derived blueprint asset named ThirdPersonCharacter (to avoid direct content references in C++)
 
-	// Setup the Combat and Stats Components
+	// Setup the player's Components
 	m_pCombatComponent = CreateDefaultSubobject<UCombatComponent>(TEXT("Combat Component"));
 	m_pCombatComponent->m_bCanBeKnockedDown = true;
 
 	m_pStatsComponent = CreateDefaultSubobject<UPlayerStatsComponent>(TEXT("Stats Component"));
 
+	m_pEvasionComponent = CreateDefaultSubobject<UEvasionComponent>(TEXT("Evasion Component"));
 
 	SetupStimulus();
 }
@@ -84,12 +85,12 @@ void ASwordFightingGameCharacter::StopSprinting()
 
 void ASwordFightingGameCharacter::Block()
 {
-	m_bIsBlocking = true;
+	m_pCombatComponent->Block();
 }
 
 void ASwordFightingGameCharacter::StopBlocking()
 {
-	m_bIsBlocking = false;
+	m_pCombatComponent->StopBlocking();
 }
 
 void ASwordFightingGameCharacter::Dodge()
@@ -97,80 +98,19 @@ void ASwordFightingGameCharacter::Dodge()
 	// Can't dodge if currently attacking or in the air
 	if (!m_pCombatComponent->IsAttacking() && CanJump() && !m_pCombatComponent->IsStaggered())
 	{
-		// Can't dodge if already dodging
-		if (!m_bIsDodging)
+		// If player is already dodging don't dodge
+		if (m_pEvasionComponent->m_bIsDodging)
+			return;
+
+		// Manage Stamina
+		if (!m_pStatsComponent->DoesMeetStaminaRequirement(10.0f))
 		{
-			// Manage Stamina
-			if (!m_pStatsComponent->DoesMeetStaminaRequirement(10.0f))
-			{
-				return;
-			}
-			m_pStatsComponent->UseStamina(10.0f);
-
-			// Enable dodging boolean
-			m_bIsDodging = true;
-
-			// Check for target lock
-			if (!m_bIsTargetLocked)
-			{
-				// When sprinting, fall into the dodge roll
-				if (m_bIsSprinting)
-				{
-					GetMesh()->GetAnimInstance()->Montage_Play(m_pFallDodgeMontage);
-				}
-				else
-				{
-					GetMesh()->GetAnimInstance()->Montage_Play(m_pDodgeMontage);
-				}
-			}
-			else
-			{
-				// Get the value from player rotation
-				float fRotValue = GetMesh()->GetAnimInstance()->CalculateDirection(GetVelocity(), GetActorRotation());
-
-				// Forward Rolling
-				if ((fRotValue >= 0 && fRotValue <= 25) || (fRotValue <= 0 && fRotValue >= -25))
-				{
-					GetMesh()->GetAnimInstance()->Montage_Play(m_pLockDodgeForwardMontage);
-					LaunchCharacter(GetActorForwardVector() * 1000, true, true);
-				}
-				else if ((fRotValue > 25 && fRotValue < 80)) // Forward Right Rolling
-				{
-					GetMesh()->GetAnimInstance()->Montage_Play(m_pLockDodgeForwardRMontage);
-					LaunchCharacter((GetActorForwardVector() + GetActorRightVector()) * 500, true, true);
-				}
-				else if ((fRotValue < -25 && fRotValue > -80)) // Forward Left Rolling
-				{
-					GetMesh()->GetAnimInstance()->Montage_Play(m_pLockDodgeForwardLMontage);
-					LaunchCharacter((GetActorForwardVector() + (GetActorRightVector() * -1)) * 500, true, true);
-				}
-				else if ((fRotValue >= 80 && fRotValue <= 100)) // Right Rolling
-				{
-					GetMesh()->GetAnimInstance()->Montage_Play(m_pLockDodgeRightMontage);
-					LaunchCharacter(GetActorRightVector() * 1000, true, true);
-				}
-				else if ((fRotValue <= -80 && fRotValue >= -100)) // Left Rolling
-				{
-					GetMesh()->GetAnimInstance()->Montage_Play(m_pLockDodgeLeftMontage);
-					LaunchCharacter(GetActorRightVector() * -1000, true, true);
-				}
-				else if ((fRotValue <= 180 && fRotValue >= 155) || (fRotValue >= -180 && fRotValue <= -155)) // Backward Rolling
-				{
-					GetMesh()->GetAnimInstance()->Montage_Play(m_pLockDodgeBackMontage);
-					LaunchCharacter(GetActorForwardVector() * -1000, true, true);
-				}
-				else if ((fRotValue > -155 && fRotValue < -100)) // Backward Left Rolling
-				{
-					GetMesh()->GetAnimInstance()->Montage_Play(m_pLockDodgeBackLMontage);
-					LaunchCharacter((GetActorForwardVector() + GetActorRightVector()) * -500, true, true);
-				}
-				else if ((fRotValue < 155 && fRotValue > 100)) // Backward Right Rolling
-				{
-					GetMesh()->GetAnimInstance()->Montage_Play(m_pLockDodgeBackRMontage);
-					LaunchCharacter(((GetActorForwardVector() * -1) + GetActorRightVector()) * 500, true, true);
-				}
-			}
+			return;
 		}
+		m_pStatsComponent->UseStamina(10.0f);
+
+		// Call Dodge from evasion component
+		m_pEvasionComponent->Dodge(m_bIsSprinting, m_bIsTargetLocked);
 	}
 }
 
@@ -264,7 +204,7 @@ void ASwordFightingGameCharacter::HandleOnMontageNotifyBegin(FName NotifyName, c
 {
 	if (NotifyName.ToString() == "Dodge") // Dodge Resetting
 	{
-		m_bIsDodging = false;
+		m_pEvasionComponent->m_bIsDodging = false;
 	}
 	else if (NotifyName.ToString() == "GetUp")
 	{
@@ -319,15 +259,15 @@ void ASwordFightingGameCharacter::HandleOnMontageEnd(UAnimMontage* a_pMontage, b
 	// Handle Dodge Montage
 	if (a_pMontage->GetName().Contains("Roll"))
 	{
-		m_bIsDodging = false;
-		m_bCanAttackAfterDodge = true;
+		m_pEvasionComponent->m_bIsDodging = false;
+		m_pEvasionComponent->m_bCanAttackAfterDodge = true;
 
 		// Play the dodge attack if clicked while dodging
-		if (m_bAttackingAfterDodge)
+		if (m_pEvasionComponent->m_bAttackingAfterDodge)
 		{
 			m_pCombatComponent->Attack("DodgeAttack");
-			m_bCanAttackAfterDodge = false;
-			m_bAttackingAfterDodge = false;
+			m_pEvasionComponent->m_bCanAttackAfterDodge = false;
+			m_pEvasionComponent->m_bAttackingAfterDodge = false;
 		}
 		else
 		{
@@ -336,7 +276,7 @@ void ASwordFightingGameCharacter::HandleOnMontageEnd(UAnimMontage* a_pMontage, b
 			GetWorld()->GetTimerManager().SetTimer(pTimerHandle, [&]()
 			{
 				// Can no longer do the attack dodge
-				m_bCanAttackAfterDodge = false;
+					m_pEvasionComponent->m_bCanAttackAfterDodge = false;
 
 			}, 1, false);
 		}
@@ -364,9 +304,9 @@ void ASwordFightingGameCharacter::TouchStopped(ETouchIndex::Type FingerIndex, FV
 void ASwordFightingGameCharacter::LightAttack()
 {
 	// Check for attack clicks while dodging
-	if (m_bIsDodging)
+	if (m_pEvasionComponent->m_bIsDodging)
 	{
-		m_bAttackingAfterDodge = true;
+		m_pEvasionComponent->m_bAttackingAfterDodge = true;
 	}
 
 	// Light Attack Logic
@@ -391,7 +331,7 @@ void ASwordFightingGameCharacter::LightAttack()
 			else
 			{
 				// Decide if attack was right after a roll
-				if (m_bCanAttackAfterDodge)
+				if (m_pEvasionComponent->m_bCanAttackAfterDodge)
 				{
 					// Handle stamina
 					if (!m_pStatsComponent->DoesMeetStaminaRequirement(20.0f))
@@ -401,7 +341,7 @@ void ASwordFightingGameCharacter::LightAttack()
 					m_pStatsComponent->UseStamina(20.0f);
 
 					m_pCombatComponent->Attack("DodgeAttack");
-					m_bCanAttackAfterDodge = false;
+					m_pEvasionComponent->m_bCanAttackAfterDodge = false;
 				}
 				else
 				{
@@ -433,7 +373,7 @@ void ASwordFightingGameCharacter::HeavyAttack()
 	if (CanJump())
 	{
 
-		if(!m_bCanAttackAfterDodge) // Normal Heavy Attack (On the Ground)
+		if(!m_pEvasionComponent->m_bCanAttackAfterDodge) // Normal Heavy Attack (On the Ground)
 		{
 			m_bIsCharging = true;
 
@@ -504,10 +444,6 @@ void ASwordFightingGameCharacter::BeginPlay()
 		UUserWidget* HUD = CreateWidget<UUserWidget>(Cast<APlayerController>(GetController()), m_cPlayerHUD);
 		HUD->AddToViewport(9999);
 	}
-
-	// Set combat component asset refs
-	m_pCombatComponent->m_pImpactParticle = m_pBloodParticle;
-	m_pCombatComponent->m_pImpactSound = m_pSlashImpactSound;
 }
 
 void ASwordFightingGameCharacter::Tick(float a_fDeltaTime)
@@ -542,7 +478,7 @@ void ASwordFightingGameCharacter::Tick(float a_fDeltaTime)
 
 void ASwordFightingGameCharacter::MoveForward(float Value)
 {
-	if (!m_pCombatComponent->IsAttacking() && !m_bIsBlocking && !m_pCombatComponent->IsStaggered() && !IsDying())
+	if (!m_pCombatComponent->IsAttacking() && !m_pCombatComponent->m_bIsBlocking && !m_pCombatComponent->IsStaggered() && !IsDying())
 	{
 		if ((Controller != nullptr) && (Value != 0.0f))
 		{
@@ -559,7 +495,7 @@ void ASwordFightingGameCharacter::MoveForward(float Value)
 
 void ASwordFightingGameCharacter::MoveRight(float Value)
 {
-	if (!m_pCombatComponent->IsAttacking() && !m_bIsBlocking && !m_pCombatComponent->IsStaggered() && !IsDying())
+	if (!m_pCombatComponent->IsAttacking() && !m_pCombatComponent->m_bIsBlocking && !m_pCombatComponent->IsStaggered() && !IsDying())
 	{
 		if ((Controller != nullptr) && (Value != 0.0f))
 		{

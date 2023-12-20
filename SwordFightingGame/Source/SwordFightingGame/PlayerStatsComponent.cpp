@@ -28,24 +28,5 @@ void UPlayerStatsComponent::BeginPlay()
 void UPlayerStatsComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
 {
 	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
-
-	// Slowly Regenerate Stamina
-	m_fStamina += m_fStaminaRegenerationRate;
-
-	// Cap the stamina at the max
-	if (m_fStamina > m_fMaxStamina)
-		m_fStamina = m_fMaxStamina;
-}
-
-// Return whether or not player meets stamina requirements
-bool UPlayerStatsComponent::DoesMeetStaminaRequirement(float a_fStaminaReq)
-{
-	return m_fStamina >= a_fStaminaReq;
-}
-
-// Set stamina to be a subtraction from amount used
-void UPlayerStatsComponent::UseStamina(float a_fStaminaUsed)
-{
-	m_fStamina -= a_fStaminaUsed;
 }
 

@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "Animation/AnimNotifies/AnimNotifyState.h"
+#include "AttackStats.h"
 #include "ANS_SlashWindow.generated.h"
 
 /**
@@ -33,13 +34,9 @@ public:
 	UPROPERTY(EditAnywhere)
 	float m_fRadius;
 
-	// Damage dealt
+	// Attack stats
 	UPROPERTY(EditAnywhere)
-	float m_fDamage;
-
-	// Knockback flag
-	UPROPERTY(EditAnywhere)
-	bool m_bKnockback = false;
+	FAttackStats m_sAttackStats;
 
 	// Whether or not to use continuous slash tracking or single check
 	UPROPERTY(EditAnywhere)

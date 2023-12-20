@@ -15,7 +15,7 @@ void UANS_SlashWindow::NotifyBegin(USkeletalMeshComponent* MeshComp, UAnimSequen
 
 	// Generate a hit sphere at the slash location (if not continuous)
 	if(!m_bContinuousTracing)
-		combatComp->GenerateHitSphere(pLocation, m_fRadius, m_fDamage, m_bDebugMode, m_bKnockback);
+		combatComp->GenerateHitSphere(pLocation, m_fRadius, m_sAttackStats, m_bDebugMode);
 
 	// Set the slash begin to the socket location
 	vSlashBegin = pLocation;
@@ -41,7 +41,7 @@ void UANS_SlashWindow::NotifyTick(USkeletalMeshComponent* MeshComp, UAnimSequenc
 
 		// Generate the hit capsule 
 		if(m_bContinuousTracing)
-			combatComp->GenerateHitCapsule(vSlashBegin, vSlashEnd, m_fRadius, m_fDamage, m_bDebugMode, m_bKnockback);
+			combatComp->GenerateHitCapsule(vSlashBegin, vSlashEnd, m_fRadius, m_sAttackStats, m_bDebugMode);
 
 		// Update the begin location
 		vSlashBegin = pLocation;
@@ -63,7 +63,7 @@ void UANS_SlashWindow::NotifyEnd(USkeletalMeshComponent* MeshComp, UAnimSequence
 
 	// Generate the hit capsule 
 	if (m_bContinuousTracing)
-		combatComp->GenerateHitCapsule(vSlashBegin, vSlashEnd, m_fRadius, m_fDamage, m_bDebugMode, m_bKnockback);
+		combatComp->GenerateHitCapsule(vSlashBegin, vSlashEnd, m_fRadius, m_sAttackStats, m_bDebugMode);
 
 	// Clear set of damaged actors
 	combatComp->m_sDamagedActors.Empty();

@@ -4,11 +4,13 @@
 
 #include "CoreMinimal.h"
 #include "Components/ActorComponent.h"
+#include "StatsComponent.h"
 #include "BossStatsComponent.generated.h"
 
+class ABoss;
 
 UCLASS( ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
-class SWORDFIGHTINGGAME_API UBossStatsComponent : public UActorComponent
+class SWORDFIGHTINGGAME_API UBossStatsComponent : public UStatsComponent
 {
 	GENERATED_BODY()
 
@@ -23,14 +25,4 @@ protected:
 public:	
 	// Called every frame
 	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
-
-	// Tracker for boss stun meter
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	float m_fMaxStunResistance = 100.0f;
-	float m_fStunMeter = m_fMaxStunResistance;
-	
-	// Methods for managing stun bar
-	void DecrementStun(float a_fStunAmount);
-	void ResetStunMeter();
-	bool IsStunMeterEmpty();
 };

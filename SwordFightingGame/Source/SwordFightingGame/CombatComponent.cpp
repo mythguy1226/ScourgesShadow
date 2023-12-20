@@ -4,6 +4,7 @@
 #include "CombatComponent.h"
 #include "Boss.h"
 #include "SwordFightingGameCharacter.h"
+#include "EvasionComponent.h"
 
 // Sets default values for this component's properties
 UCombatComponent::UCombatComponent()
@@ -32,7 +33,7 @@ void UCombatComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActo
 
 }
 
-void UCombatComponent::GenerateHitSphere(FVector a_vLocation, float a_fRadius, float a_fDamage, bool a_bDebug, bool a_bKnockback)
+void UCombatComponent::GenerateHitSphere(FVector a_vLocation, float a_fRadius, FAttackStats a_sAttackStats, bool a_bDebug)
 {
 	// Init hit results
 	TArray<FHitResult> outHits;
@@ -77,7 +78,7 @@ void UCombatComponent::GenerateHitSphere(FVector a_vLocation, float a_fRadius, f
 			ABoss* pBoss = Cast<ABoss>(i->GetActor());
 			if (pBoss) // Continue if valid
 			{
-				HandleBossDamage(pBoss, a_vLocation, a_fDamage);
+				HandleBossDamage(pBoss, a_vLocation, a_sAttackStats.sDamage);
 				break;
 			}
 			
@@ -85,14 +86,14 @@ void UCombatComponent::GenerateHitSphere(FVector a_vLocation, float a_fRadius, f
 			ASwordFightingGameCharacter* pPlayer = Cast<ASwordFightingGameCharacter>(i->GetActor());
 			if (pPlayer) // Continue if valid
 			{
-				HandlePlayerDamage(pPlayer, i->Location, a_fDamage, a_bKnockback);
+				HandlePlayerDamage(pPlayer, i->Location, a_sAttackStats.sDamage, a_sAttackStats.sKnockback);
 				break;
 			}
 		}
 	}
 }
 
-void UCombatComponent::GenerateHitCapsule(FVector a_vBeginLoc, FVector a_vEndLoc, float a_fRadius, float a_fDamage, bool a_bDebug, bool a_bKnockback)
+void UCombatComponent::GenerateHitCapsule(FVector a_vBeginLoc, FVector a_vEndLoc, float a_fRadius, FAttackStats a_sAttackStats, bool a_bDebug)
 {
 	// Init hit results
 	TArray<FHitResult> outHits;
@@ -138,7 +139,7 @@ void UCombatComponent::GenerateHitCapsule(FVector a_vBeginLoc, FVector a_vEndLoc
 			ABoss* pBoss = Cast<ABoss>(i->GetActor());
 			if (pBoss) // Continue if valid
 			{
-				HandleBossDamage(pBoss, a_vEndLoc, a_fDamage);
+				HandleBossDamage(pBoss, a_vEndLoc, a_sAttackStats.sDamage);
 				break;
 			}
 			
@@ -146,7 +147,7 @@ void UCombatComponent::GenerateHitCapsule(FVector a_vBeginLoc, FVector a_vEndLoc
 			ASwordFightingGameCharacter* pPlayer = Cast<ASwordFightingGameCharacter>(i->GetActor());
 			if (pPlayer) // Continue if valid
 			{
-				HandlePlayerDamage(pPlayer, i->Location, a_fDamage, a_bKnockback);
+				HandlePlayerDamage(pPlayer, i->Location, a_sAttackStats.sDamage, a_sAttackStats.sKnockback);
 				break;
 			}
 		}
@@ -155,35 +156,32 @@ void UCombatComponent::GenerateHitCapsule(FVector a_vBeginLoc, FVector a_vEndLoc
 
 void UCombatComponent::HandleBossDamage(ABoss* a_pBoss, FVector a_vLoc, float a_fDamage)
 {
+	// Return if boss is dying or dead
+	if (m_fHealth <= 0)
+	{
+		return;
+	}
+
 	// Deal damage
 	a_pBoss->TakeDamage(a_fDamage);
 
-	// Spawn Blood Particle at the hit location
-	if (m_pImpactParticle != nullptr)
-		UNiagaraFunctionLibrary::SpawnSystemAtLocation(GetWorld(), m_pImpactParticle, a_vLoc, FQuat::Identity.Rotator());
+	// Get boss' combat component
+	UCombatComponent* pCombatComp = a_pBoss->GetCombatComponent();
 
-	// Play damage indicator sound
-	if (m_pImpactSound != nullptr)
-		UGameplayStatics::PlaySoundAtLocation(GetWorld(), m_pImpactSound, GetOwner()->GetActorLocation());
-
-	// Get player's combat componenet
-	UCombatComponent* bossCombatComp = Cast<UCombatComponent>(a_pBoss->GetComponentByClass(UCombatComponent::StaticClass()));
-
-	// Return early if invalid
-	if (!bossCombatComp)
-		return;
-
-	// Handle stun meter
-	if (bossCombatComp->m_pHurtMontage != nullptr)
+	// Null check component
+	if (pCombatComp)
 	{
-		// Deplete stun meter
-		a_pBoss->GetStatsComponenet()->DecrementStun(15.0f);
-		if (a_pBoss->GetStatsComponenet()->IsStunMeterEmpty()) // Stun the boss
-		{
-			a_pBoss->GetMesh()->GetAnimInstance()->Montage_Play(bossCombatComp->m_pHurtMontage);
-			a_pBoss->GetStatsComponenet()->ResetStunMeter();
-		}
+		// Spawn Blood Particle at the hit location
+		if (pCombatComp->m_pImpactParticle != nullptr)
+			UNiagaraFunctionLibrary::SpawnSystemAtLocation(GetWorld(), pCombatComp->m_pImpactParticle, a_vLoc, FQuat::Identity.Rotator());
+
+		// Play damage indicator sound
+		if (pCombatComp->m_pImpactSound != nullptr)
+			UGameplayStatics::PlaySoundAtLocation(GetWorld(), pCombatComp->m_pImpactSound, GetOwner()->GetActorLocation());
 	}
+
+	// Deplete stun meter
+	a_pBoss->GetStatsComponenet()->DecrementStun(15.0f);
 }
 
 void UCombatComponent::HandlePlayerDamage(ASwordFightingGameCharacter* a_pPlayer, FVector a_vLoc, float a_fDamage, bool a_bKnockback)
@@ -194,8 +192,11 @@ void UCombatComponent::HandlePlayerDamage(ASwordFightingGameCharacter* a_pPlayer
 		return;
 	}
 
+	// Get player's evasion componenet
+	UEvasionComponent* pEvasionComp = Cast<UEvasionComponent>(a_pPlayer->GetComponentByClass(UEvasionComponent::StaticClass()));
+
 	// Don't deal damage if player is dodging, staggered, or already dying
-	if (!a_pPlayer->m_bIsDodging && !IsStaggered() && !a_pPlayer->IsDying())
+	if (!pEvasionComp->m_bIsDodging && !IsStaggered() && !a_pPlayer->IsDying())
 	{
 		// Get player's combat componenet
 		UCombatComponent* playerCombatComp = Cast<UCombatComponent>(a_pPlayer->GetComponentByClass(UCombatComponent::StaticClass()));
@@ -205,14 +206,14 @@ void UCombatComponent::HandlePlayerDamage(ASwordFightingGameCharacter* a_pPlayer
 			return;
 
 		// Play hurt animation and deal damage
-		if (m_pHurtMontage != nullptr && !a_bKnockback)
+		if (playerCombatComp->m_pHurtMontage && !a_bKnockback)
 		{
 			// If player isn't block do normal damage
-			if (!a_pPlayer->m_bIsBlocking)
+			if (!playerCombatComp->m_bIsBlocking)
 			{
 				// Play hurt sound
-				if (a_pPlayer->m_pHurtSound != nullptr)
-					UGameplayStatics::PlaySoundAtLocation(GetWorld(), a_pPlayer->m_pHurtSound, GetOwner()->GetActorLocation());
+				if (playerCombatComp->m_pImpactSound)
+					UGameplayStatics::PlaySoundAtLocation(GetWorld(), playerCombatComp->m_pImpactSound, GetOwner()->GetActorLocation());
 
 				a_pPlayer->GetMesh()->GetAnimInstance()->Montage_Play(playerCombatComp->m_pHurtMontage);
 				a_pPlayer->TakeDamage(a_fDamage);
@@ -220,10 +221,10 @@ void UCombatComponent::HandlePlayerDamage(ASwordFightingGameCharacter* a_pPlayer
 			else // Otherwise negate some damage
 			{
 				// Play impact sound
-				if (a_pPlayer->m_pBlockSound != nullptr)
-					UGameplayStatics::PlaySoundAtLocation(GetWorld(), a_pPlayer->m_pBlockSound, GetOwner()->GetActorLocation());
+				if (playerCombatComp->m_pBlockSound)
+					UGameplayStatics::PlaySoundAtLocation(GetWorld(), playerCombatComp->m_pBlockSound, GetOwner()->GetActorLocation());
 
-				a_pPlayer->GetMesh()->GetAnimInstance()->Montage_Play(a_pPlayer->m_pShieldImpactMontage);
+				a_pPlayer->GetMesh()->GetAnimInstance()->Montage_Play(playerCombatComp->m_pShieldImpactMontage);
 				a_pPlayer->TakeDamage(a_fDamage / 2.0f);
 			}
 		}
@@ -232,22 +233,21 @@ void UCombatComponent::HandlePlayerDamage(ASwordFightingGameCharacter* a_pPlayer
 		if (a_bKnockback)
 		{
 			// Spawn Blood Particle at the hit location
-			if (a_pPlayer->m_pBloodParticle != nullptr)
-				UNiagaraFunctionLibrary::SpawnSystemAtLocation(GetWorld(), a_pPlayer->m_pBloodParticle, a_vLoc, FQuat::Identity.Rotator());
+			if (playerCombatComp->m_pImpactParticle)
+				UNiagaraFunctionLibrary::SpawnSystemAtLocation(GetWorld(), playerCombatComp->m_pImpactParticle, a_vLoc, FQuat::Identity.Rotator());
 
-			// Play damage indicator sound
-			if (a_pPlayer->m_pKnockbackSound != nullptr)
-				UGameplayStatics::PlaySoundAtLocation(GetWorld(), a_pPlayer->m_pKnockbackSound, a_pPlayer->GetActorLocation());
+			// Initiate knockback
+			Knockback(playerCombatComp);
 
-			if (!a_pPlayer->GetMesh()->GetAnimInstance()->Montage_IsPlaying(playerCombatComp->m_pKnockbackMontage))
-			{
-				FVector playerToEnemy = a_pPlayer->GetActorLocation() - GetOwner()->GetActorLocation();
-				a_pPlayer->LaunchCharacter(playerToEnemy * 30, true, true);
-				a_pPlayer->GetMesh()->GetAnimInstance()->Montage_Play(playerCombatComp->m_pKnockbackMontage);
-				a_pPlayer->TakeDamage(a_fDamage);
-			}
+			// Damage player
+			a_pPlayer->TakeDamage(a_fDamage);
 		}
 	}
+}
+
+void UCombatComponent::HandleDamage(ACharacter* a_pVictim, FVector a_vLoc, FAttackStats a_sAttackStats)
+{
+
 }
 
 void UCombatComponent::Attack(FString a_sAttackName)
@@ -329,6 +329,24 @@ bool UCombatComponent::IsAttacking()
 	return false;
 }
 
+void UCombatComponent::Knockback(UCombatComponent* a_pCombatComp)
+{
+	// Get owner of component and then get their animator
+	UAnimInstance* pAnimInst = Cast<ACharacter>(a_pCombatComp->GetOwner())->GetMesh()->GetAnimInstance();
+	ACharacter* pOwner = Cast<ACharacter>(a_pCombatComp->GetOwner());
+
+	// Play damage indicator sound
+	if (a_pCombatComp->m_pKnockbackSound)
+		UGameplayStatics::PlaySoundAtLocation(GetWorld(), a_pCombatComp->m_pKnockbackSound, pOwner->GetActorLocation());
+
+	if (!pAnimInst->Montage_IsPlaying(a_pCombatComp->m_pKnockbackMontage))
+	{
+		FVector playerToEnemy = pOwner->GetActorLocation() - GetOwner()->GetActorLocation();
+		pOwner->LaunchCharacter(playerToEnemy * 30, true, true);
+		pAnimInst->Montage_Play(a_pCombatComp->m_pKnockbackMontage);
+	}
+}
+
 bool UCombatComponent::IsStaggered()
 {
 	// Get owner of component and then get their animator
@@ -344,5 +362,15 @@ bool UCombatComponent::IsStaggered()
 
 	// Check if any stagger animations are playing
 	return pAnimInst->Montage_IsPlaying(m_pHurtMontage);
+}
+
+void UCombatComponent::Block()
+{
+	m_bIsBlocking = true;
+}
+
+void UCombatComponent::StopBlocking()
+{
+	m_bIsBlocking = false;
 }
 
