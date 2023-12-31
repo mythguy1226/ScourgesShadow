@@ -133,30 +133,6 @@ void ASwordFightingGameCharacter::ToggleTargetLock()
 	}
 }
 
-void ASwordFightingGameCharacter::TakeDamage(float a_fDamage)
-{
-	// If Player already dead or dying then return
-	if (m_pCombatComponent->m_fHealth <= 0)
-	{
-		return;
-	}
-	
-	// Deal damage
-	m_pCombatComponent->m_fHealth -= a_fDamage;
-
-	// Death Handling
-	if (m_pCombatComponent->m_fHealth <= 0)
-	{
-		GetMesh()->GetAnimInstance()->Montage_Play(m_pDeathMontage);
-		UGameplayStatics::PlaySoundAtLocation(GetWorld(), m_pDeathSound, GetActorLocation());
-	}
-}
-
-bool ASwordFightingGameCharacter::IsDying()
-{
-	return GetMesh()->GetAnimInstance()->Montage_IsPlaying(m_pDeathMontage);
-}
-
 void ASwordFightingGameCharacter::SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent)
 {
 	// Set up gameplay key bindings
@@ -478,7 +454,7 @@ void ASwordFightingGameCharacter::Tick(float a_fDeltaTime)
 
 void ASwordFightingGameCharacter::MoveForward(float Value)
 {
-	if (!m_pCombatComponent->IsAttacking() && !m_pCombatComponent->m_bIsBlocking && !m_pCombatComponent->IsStaggered() && !IsDying())
+	if (!m_pCombatComponent->IsAttacking() && !m_pCombatComponent->m_bIsBlocking && !m_pCombatComponent->IsStaggered() && !m_pCombatComponent->IsDying())
 	{
 		if ((Controller != nullptr) && (Value != 0.0f))
 		{
@@ -495,7 +471,7 @@ void ASwordFightingGameCharacter::MoveForward(float Value)
 
 void ASwordFightingGameCharacter::MoveRight(float Value)
 {
-	if (!m_pCombatComponent->IsAttacking() && !m_pCombatComponent->m_bIsBlocking && !m_pCombatComponent->IsStaggered() && !IsDying())
+	if (!m_pCombatComponent->IsAttacking() && !m_pCombatComponent->m_bIsBlocking && !m_pCombatComponent->IsStaggered() && !m_pCombatComponent->IsDying())
 	{
 		if ((Controller != nullptr) && (Value != 0.0f))
 		{
@@ -514,7 +490,7 @@ void ASwordFightingGameCharacter::MoveRight(float Value)
 void ASwordFightingGameCharacter::Jump()
 {
 	// Can't jump if currently attacking
-	if (!m_pCombatComponent->IsAttacking() && !IsDying() && !m_pCombatComponent->IsStaggered())
+	if (!m_pCombatComponent->IsAttacking() && !m_pCombatComponent->IsDying() && !m_pCombatComponent->IsStaggered())
 	{
 		// Super call to ACharacter Jump
 		Super::Jump();

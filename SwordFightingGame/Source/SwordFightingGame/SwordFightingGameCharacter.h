@@ -54,13 +54,6 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Animation")
 	UAnimMontage* m_pJumpMontage;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Animation")
-	UAnimMontage* m_pDeathMontage;
-
-	// Sounds
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Sound")
-	USoundBase* m_pDeathSound;
-
 	// Method for handling light attacks
 	void LightAttack();
 	void HeavyAttack();
@@ -89,10 +82,6 @@ public:
 	ABoss* m_pTargetLockedBoss;
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
 	bool m_bIsTargetLocked = false;
-
-	// *** Handle Damage and Staggering ***
-	void TakeDamage(float a_fDamage);
-	bool IsDying();
 
 protected:
 	// Called upon begin of play

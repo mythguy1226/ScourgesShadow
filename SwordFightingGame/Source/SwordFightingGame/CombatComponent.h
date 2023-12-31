@@ -39,6 +39,9 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	USoundBase* m_pBlockSound;
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	USoundBase* m_pDeathSound;
+
 	// Health meter
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	float m_fMaxHealth = 100.0f;
@@ -51,8 +54,6 @@ public:
 	// Damage handlers and trace generation handlers
 	void GenerateHitSphere(FVector a_vLocation, float a_fRadius, FAttackStats a_sAttackStats, bool a_bDebug = false);
 	void GenerateHitCapsule(FVector a_vBeginLoc, FVector a_vEndLoc, float a_fRadius, FAttackStats a_sAttackStats, bool a_bDebug = false);
-	void HandleBossDamage(ABoss* a_pBoss, FVector a_vLoc, float a_fDamage);
-	void HandlePlayerDamage(ASwordFightingGameCharacter* a_pPlayer, FVector a_vLoc, float a_fDamage, bool a_bKnockback);
 	void HandleDamage(ACharacter* a_pVictim, FVector a_vLoc, FAttackStats a_sAttackStats);
 
 	// Set of damaged actors that is tracked during combat
@@ -90,8 +91,9 @@ public:
 	// Method for handling knockback
 	void Knockback(UCombatComponent* a_pCombatComp);
 
-	// Method for checking if staggered
+	// Methods for checking if staggered or dying
 	bool IsStaggered();
+	bool IsDying();
 
 	// Indicates whether actor is able to be knocked down
 	bool m_bCanBeKnockedDown = false;
@@ -99,9 +101,15 @@ public:
 	// Flag for blocking status
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
 	bool m_bIsBlocking = false;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	bool m_bCanBlock = false;
 
 	// Toggle blocking
 	void Block();
 	void StopBlocking();
+
+	// Methods for taking damage and death
+	void TakeDamage(float a_fDamage);
+	void Die();
 
 };

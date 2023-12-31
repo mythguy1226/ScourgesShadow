@@ -48,13 +48,6 @@ public:
 	// Called to bind functionality to input
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
 
-	// References to sounds
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Sound")
-	TArray<USoundBase*> m_pDeathSounds;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Sound")
-	USoundBase* m_pEnemyDamageSound;
-
 	// General Fields
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
 	FString m_sName = "Demonic Knight";
@@ -76,11 +69,7 @@ public:
 	void SlashAttack();
 	void KickAttack();
 	void PoundAttack();
-	void TakeDamage(float a_fDamage);
 	AMoltenSword* m_pEquippedSword;
-
-	// Death handling
-	void Die();
 
 	// Montage End Event Handler
 	UFUNCTION()

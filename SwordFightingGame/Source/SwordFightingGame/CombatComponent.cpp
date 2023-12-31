@@ -5,6 +5,7 @@
 #include "Boss.h"
 #include "SwordFightingGameCharacter.h"
 #include "EvasionComponent.h"
+#include "GameFramework/CharacterMovementComponent.h"
 
 // Sets default values for this component's properties
 UCombatComponent::UCombatComponent()
@@ -74,21 +75,12 @@ void UCombatComponent::GenerateHitSphere(FVector a_vLocation, float a_fRadius, F
 			else // Add to set if not
 				m_sDamagedActors.Add(i->GetActor());
 
-			// Try to cast to a boss
-			ABoss* pBoss = Cast<ABoss>(i->GetActor());
-			if (pBoss) // Continue if valid
-			{
-				HandleBossDamage(pBoss, a_vLocation, a_sAttackStats.sDamage);
-				break;
-			}
-			
-			// Try to cast to the player
-			ASwordFightingGameCharacter* pPlayer = Cast<ASwordFightingGameCharacter>(i->GetActor());
-			if (pPlayer) // Continue if valid
-			{
-				HandlePlayerDamage(pPlayer, i->Location, a_sAttackStats.sDamage, a_sAttackStats.sKnockback);
-				break;
-			}
+			// Try casting actor to a character
+			ACharacter* pVictim = Cast<ACharacter>(i->GetActor());
+
+			// Handle damage
+			if (pVictim)
+				HandleDamage(pVictim, a_vLocation, a_sAttackStats);
 		}
 	}
 }
@@ -134,120 +126,90 @@ void UCombatComponent::GenerateHitCapsule(FVector a_vBeginLoc, FVector a_vEndLoc
 			else // Add to set if not
 				m_sDamagedActors.Add(i->GetActor());
 
+			// Try casting actor to a character
+			ACharacter* pVictim = Cast<ACharacter>(i->GetActor());
 
-			// Try to cast to a boss
-			ABoss* pBoss = Cast<ABoss>(i->GetActor());
-			if (pBoss) // Continue if valid
-			{
-				HandleBossDamage(pBoss, a_vEndLoc, a_sAttackStats.sDamage);
-				break;
-			}
-			
-			// Try to cast to the player
-			ASwordFightingGameCharacter* pPlayer = Cast<ASwordFightingGameCharacter>(i->GetActor());
-			if (pPlayer) // Continue if valid
-			{
-				HandlePlayerDamage(pPlayer, i->Location, a_sAttackStats.sDamage, a_sAttackStats.sKnockback);
-				break;
-			}
-		}
-	}
-}
-
-void UCombatComponent::HandleBossDamage(ABoss* a_pBoss, FVector a_vLoc, float a_fDamage)
-{
-	// Return if boss is dying or dead
-	if (m_fHealth <= 0)
-	{
-		return;
-	}
-
-	// Deal damage
-	a_pBoss->TakeDamage(a_fDamage);
-
-	// Get boss' combat component
-	UCombatComponent* pCombatComp = a_pBoss->GetCombatComponent();
-
-	// Null check component
-	if (pCombatComp)
-	{
-		// Spawn Blood Particle at the hit location
-		if (pCombatComp->m_pImpactParticle != nullptr)
-			UNiagaraFunctionLibrary::SpawnSystemAtLocation(GetWorld(), pCombatComp->m_pImpactParticle, a_vLoc, FQuat::Identity.Rotator());
-
-		// Play damage indicator sound
-		if (pCombatComp->m_pImpactSound != nullptr)
-			UGameplayStatics::PlaySoundAtLocation(GetWorld(), pCombatComp->m_pImpactSound, GetOwner()->GetActorLocation());
-	}
-
-	// Deplete stun meter
-	a_pBoss->GetStatsComponenet()->DecrementStun(15.0f);
-}
-
-void UCombatComponent::HandlePlayerDamage(ASwordFightingGameCharacter* a_pPlayer, FVector a_vLoc, float a_fDamage, bool a_bKnockback)
-{
-	// Return if player is dying or dead
-	if (m_fHealth <= 0)
-	{
-		return;
-	}
-
-	// Get player's evasion componenet
-	UEvasionComponent* pEvasionComp = Cast<UEvasionComponent>(a_pPlayer->GetComponentByClass(UEvasionComponent::StaticClass()));
-
-	// Don't deal damage if player is dodging, staggered, or already dying
-	if (!pEvasionComp->m_bIsDodging && !IsStaggered() && !a_pPlayer->IsDying())
-	{
-		// Get player's combat componenet
-		UCombatComponent* playerCombatComp = Cast<UCombatComponent>(a_pPlayer->GetComponentByClass(UCombatComponent::StaticClass()));
-
-		// Return early if invalid
-		if (!playerCombatComp)
-			return;
-
-		// Play hurt animation and deal damage
-		if (playerCombatComp->m_pHurtMontage && !a_bKnockback)
-		{
-			// If player isn't block do normal damage
-			if (!playerCombatComp->m_bIsBlocking)
-			{
-				// Play hurt sound
-				if (playerCombatComp->m_pImpactSound)
-					UGameplayStatics::PlaySoundAtLocation(GetWorld(), playerCombatComp->m_pImpactSound, GetOwner()->GetActorLocation());
-
-				a_pPlayer->GetMesh()->GetAnimInstance()->Montage_Play(playerCombatComp->m_pHurtMontage);
-				a_pPlayer->TakeDamage(a_fDamage);
-			}
-			else // Otherwise negate some damage
-			{
-				// Play impact sound
-				if (playerCombatComp->m_pBlockSound)
-					UGameplayStatics::PlaySoundAtLocation(GetWorld(), playerCombatComp->m_pBlockSound, GetOwner()->GetActorLocation());
-
-				a_pPlayer->GetMesh()->GetAnimInstance()->Montage_Play(playerCombatComp->m_pShieldImpactMontage);
-				a_pPlayer->TakeDamage(a_fDamage / 2.0f);
-			}
-		}
-
-		// Handle Forceful attacks
-		if (a_bKnockback)
-		{
-			// Spawn Blood Particle at the hit location
-			if (playerCombatComp->m_pImpactParticle)
-				UNiagaraFunctionLibrary::SpawnSystemAtLocation(GetWorld(), playerCombatComp->m_pImpactParticle, a_vLoc, FQuat::Identity.Rotator());
-
-			// Initiate knockback
-			Knockback(playerCombatComp);
-
-			// Damage player
-			a_pPlayer->TakeDamage(a_fDamage);
+			// Handle damage
+			if (pVictim)
+				HandleDamage(pVictim, a_vEndLoc, a_sAttackStats);
 		}
 	}
 }
 
 void UCombatComponent::HandleDamage(ACharacter* a_pVictim, FVector a_vLoc, FAttackStats a_sAttackStats)
 {
+	// Get the character's combat component
+	UCombatComponent* pVicCombComp = Cast<UCombatComponent>(a_pVictim->GetComponentByClass(UCombatComponent::StaticClass()));
 
+	// Get the character's stats component
+	UStatsComponent* pVicStatsComp = Cast<UStatsComponent>(a_pVictim->GetComponentByClass(UStatsComponent::StaticClass()));
+
+	// Get the character's evasion component
+	UEvasionComponent* pEvasionComp = Cast<UEvasionComponent>(a_pVictim->GetComponentByClass(UEvasionComponent::StaticClass()));
+
+	// Return if victim doesnt have a combat component
+	if (!pVicCombComp)
+		return;
+
+	// Return if player is dying or dead
+	if (pVicCombComp->m_fHealth <= 0)
+		return;
+
+	// Return if dodging
+	if (pEvasionComp)
+		if (pEvasionComp->m_bIsDodging)
+			return;
+
+	// Return if actively dying
+	if (pVicCombComp->IsDying())
+		return;
+
+	// Handle blocked attacks
+	if (pVicCombComp->m_pHurtMontage && !a_sAttackStats.sKnockback && m_bCanBlock)
+	{
+		// If player isn't block do normal damage
+		if (!pVicCombComp->m_bIsBlocking)
+		{
+			// Play hurt sound
+			if (pVicCombComp->m_pImpactSound)
+				UGameplayStatics::PlaySoundAtLocation(GetWorld(), pVicCombComp->m_pImpactSound, GetOwner()->GetActorLocation());
+
+			// Deal damage
+			pVicCombComp->TakeDamage(a_sAttackStats.sDamage);
+
+			// Deplete stun meter
+			pVicStatsComp->DecrementStun(a_sAttackStats.sStunDamage);
+		}
+		else // Otherwise negate some damage
+		{
+			// Play impact sound
+			if (pVicCombComp->m_pBlockSound)
+				UGameplayStatics::PlaySoundAtLocation(GetWorld(), pVicCombComp->m_pBlockSound, GetOwner()->GetActorLocation());
+
+			a_pVictim->GetMesh()->GetAnimInstance()->Montage_Play(pVicCombComp->m_pShieldImpactMontage);
+			pVicCombComp->TakeDamage(a_sAttackStats.sDamage / 2.0f);
+		}
+	}
+	if(!m_bCanBlock) // Handle attacks for those who cant block
+	{
+		// Spawn impact particle at the hit location
+		if (pVicCombComp->m_pImpactParticle != nullptr)
+			UNiagaraFunctionLibrary::SpawnSystemAtLocation(GetWorld(), pVicCombComp->m_pImpactParticle, a_vLoc, FQuat::Identity.Rotator());
+
+		// Play damage indicator sound
+		if (pVicCombComp->m_pImpactSound != nullptr)
+			UGameplayStatics::PlaySoundAtLocation(GetWorld(), pVicCombComp->m_pImpactSound, GetOwner()->GetActorLocation());
+
+		// Deal damage
+		pVicCombComp->TakeDamage(a_sAttackStats.sDamage);
+
+		// Deplete stun meter
+		pVicStatsComp->DecrementStun(a_sAttackStats.sStunDamage);
+	}
+
+	// Handle Forceful attacks
+	if (a_sAttackStats.sKnockback)
+		Knockback(pVicCombComp);
 }
 
 void UCombatComponent::Attack(FString a_sAttackName)
@@ -364,6 +326,19 @@ bool UCombatComponent::IsStaggered()
 	return pAnimInst->Montage_IsPlaying(m_pHurtMontage);
 }
 
+bool UCombatComponent::IsDying()
+{
+	// Get owner of component and then get their animator
+	UAnimInstance* pAnimInst = Cast<ACharacter>(GetOwner())->GetMesh()->GetAnimInstance();
+
+	// Return early if the anim instance wasn't found
+	if (!pAnimInst)
+		return false;
+
+	// Check if any dying animations are playing
+	return pAnimInst->Montage_IsPlaying(m_pDeathMontage);
+}
+
 void UCombatComponent::Block()
 {
 	m_bIsBlocking = true;
@@ -372,5 +347,38 @@ void UCombatComponent::Block()
 void UCombatComponent::StopBlocking()
 {
 	m_bIsBlocking = false;
+}
+
+void UCombatComponent::TakeDamage(float a_fDamage)
+{
+	// Check if already dying
+	if (IsDying())
+		return;
+
+	// Negate health by damage amount
+	m_fHealth -= a_fDamage;
+
+	// Handle death
+	if (m_fHealth <= 0.0f)
+		Die();
+}
+
+void UCombatComponent::Die()
+{
+	// Get owner of component and then get their animator
+	UAnimInstance* pAnimInst = Cast<ACharacter>(GetOwner())->GetMesh()->GetAnimInstance();
+
+	// Return early if the anim instance wasn't found
+	if (!pAnimInst)
+		return;
+
+	// Play the death montage and death sound
+	if (m_pDeathMontage)
+		pAnimInst->Montage_Play(m_pDeathMontage);
+	if(m_pDeathSound)
+		UGameplayStatics::PlaySoundAtLocation(GetWorld(), m_pDeathSound, GetOwner()->GetActorLocation());
+
+	// Disable character movement
+	Cast<ACharacter>(GetOwner())->GetCharacterMovement()->DisableMovement();
 }
 

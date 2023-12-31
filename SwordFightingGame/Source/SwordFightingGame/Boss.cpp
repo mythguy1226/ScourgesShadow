@@ -112,56 +112,6 @@ void ABoss::PoundAttack()
 	m_pCombatComponent->Attack("PoundAttack");
 }
 
-void ABoss::TakeDamage(float a_fDamage)
-{
-	// Check if death montage is playing
-	UAnimInstance* pAnimInstance = GetMesh()->GetAnimInstance();
-	if (pAnimInstance != nullptr)
-	{
-		if (pAnimInstance->Montage_IsPlaying(m_pCombatComponent->m_pDeathMontage))
-		{
-			return;
-		}
-	}
-
-	// Play damage indicator
-	if (m_pEnemyDamageSound != nullptr)
-	{
-		UGameplayStatics::PlaySoundAtLocation(GetWorld(), m_pEnemyDamageSound, GetActorLocation());
-	}
-
-	// Deal damage
-	m_pCombatComponent->m_fHealth -= a_fDamage;
-
-	// Death handling
-	if (m_pCombatComponent->m_fHealth <= 0)
-	{
-		Die();
-	}
-}
-
-void ABoss::Die()
-{
-	// Play death sounds
-	if (m_pDeathSounds.Num() > 0)
-	{
-		UGameplayStatics::PlaySoundAtLocation(GetWorld(), m_pDeathSounds[FMath::RandRange(0, m_pDeathSounds.Num() - 1)], GetActorLocation());
-	}
-
-	// Play death montage
-	UAnimInstance* pAnimInstance = GetMesh()->GetAnimInstance();
-	if (pAnimInstance != nullptr)
-	{
-		if (m_pCombatComponent->m_pDeathMontage != nullptr)
-		{
-			pAnimInstance->Montage_Play(m_pCombatComponent->m_pDeathMontage);
-		}
-	}
-
-	// Disable movement
-	GetCharacterMovement()->DisableMovement();
-}
-
 void ABoss::HandleOnMontageEnded(UAnimMontage* a_pMontage, bool a_bInterrupted)
 {
 	// Check for death montage
