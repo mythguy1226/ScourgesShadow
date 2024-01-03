@@ -164,8 +164,12 @@ void UCombatComponent::HandleDamage(ACharacter* a_pVictim, FVector a_vLoc, FAtta
 	if (pVicCombComp->IsDying())
 		return;
 
+	// Return if staggered by knockdown
+	if (pVicCombComp->m_bCanBeKnockedDown && pVicCombComp->IsStaggered())
+		return;
+
 	// Handle blocked attacks
-	if (pVicCombComp->m_pHurtMontage && !a_sAttackStats.sKnockback && m_bCanBlock)
+	if (pVicCombComp->m_pHurtMontage && !a_sAttackStats.sKnockback && pVicCombComp->m_bCanBlock)
 	{
 		// If player isn't block do normal damage
 		if (!pVicCombComp->m_bIsBlocking)
@@ -174,11 +178,11 @@ void UCombatComponent::HandleDamage(ACharacter* a_pVictim, FVector a_vLoc, FAtta
 			if (pVicCombComp->m_pImpactSound)
 				UGameplayStatics::PlaySoundAtLocation(GetWorld(), pVicCombComp->m_pImpactSound, GetOwner()->GetActorLocation());
 
-			// Deal damage
-			pVicCombComp->TakeDamage(a_sAttackStats.sDamage);
-
 			// Deplete stun meter
 			pVicStatsComp->DecrementStun(a_sAttackStats.sStunDamage);
+
+			// Deal damage
+			pVicCombComp->TakeDamage(a_sAttackStats.sDamage);
 		}
 		else // Otherwise negate some damage
 		{
@@ -190,7 +194,7 @@ void UCombatComponent::HandleDamage(ACharacter* a_pVictim, FVector a_vLoc, FAtta
 			pVicCombComp->TakeDamage(a_sAttackStats.sDamage / 2.0f);
 		}
 	}
-	if(!m_bCanBlock) // Handle attacks for those who cant block
+	if(!pVicCombComp->m_bCanBlock) // Handle attacks for those who cant block
 	{
 		// Spawn impact particle at the hit location
 		if (pVicCombComp->m_pImpactParticle != nullptr)
@@ -200,16 +204,22 @@ void UCombatComponent::HandleDamage(ACharacter* a_pVictim, FVector a_vLoc, FAtta
 		if (pVicCombComp->m_pImpactSound != nullptr)
 			UGameplayStatics::PlaySoundAtLocation(GetWorld(), pVicCombComp->m_pImpactSound, GetOwner()->GetActorLocation());
 
-		// Deal damage
-		pVicCombComp->TakeDamage(a_sAttackStats.sDamage);
-
 		// Deplete stun meter
 		pVicStatsComp->DecrementStun(a_sAttackStats.sStunDamage);
+
+		// Deal damage
+		pVicCombComp->TakeDamage(a_sAttackStats.sDamage);
 	}
 
 	// Handle Forceful attacks
 	if (a_sAttackStats.sKnockback)
+	{
+		// Knockback opponent
 		Knockback(pVicCombComp);
+
+		// Deal damage
+		pVicCombComp->TakeDamage(a_sAttackStats.sDamage);
+	}
 }
 
 void UCombatComponent::Attack(FString a_sAttackName)
@@ -293,6 +303,10 @@ bool UCombatComponent::IsAttacking()
 
 void UCombatComponent::Knockback(UCombatComponent* a_pCombatComp)
 {
+	// Return if dying
+	if (a_pCombatComp->IsDying())
+		return;
+
 	// Get owner of component and then get their animator
 	UAnimInstance* pAnimInst = Cast<ACharacter>(a_pCombatComp->GetOwner())->GetMesh()->GetAnimInstance();
 	ACharacter* pOwner = Cast<ACharacter>(a_pCombatComp->GetOwner());

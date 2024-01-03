@@ -8,6 +8,7 @@
 #include "AudioManager.h"
 #include "Blueprint/UserWidget.h"
 #include "GlobalManager.h"
+#include "UIManager.h"
 #include "GameFramework/CharacterMovementComponent.h"
 
 // Sets default values
@@ -31,9 +32,6 @@ void ABoss::BeginPlay()
 {
 	// Super call
 	Super::BeginPlay();
-	
-	// Bind events
-	GetMesh()->GetAnimInstance()->OnMontageEnded.AddDynamic(this, &ABoss::HandleOnMontageEnded);
 
 	// Attach the sword to the boss 
 	AttachSword();
@@ -112,39 +110,21 @@ void ABoss::PoundAttack()
 	m_pCombatComponent->Attack("PoundAttack");
 }
 
-void ABoss::HandleOnMontageEnded(UAnimMontage* a_pMontage, bool a_bInterrupted)
+void ABoss::Reset()
 {
-	// Check for death montage
-	if (a_pMontage->GetName().Contains("Death_Montage"))
-	{
-		// Update combat status
-		m_bInCombat = false;
+	// Update combat status
+	m_bInCombat = false;
 
-		// Play the widget animation for fading in
-		if (m_cEnemyDeathScreen != nullptr)
-		{
-			// Get the death screen
-			UUserWidget* pDeathScreen = CreateWidget<UUserWidget>(Cast<APlayerController>(UGameplayStatics::GetPlayerController(GetWorld(), 0)), m_cEnemyDeathScreen);
-			
-			// Play the death screen widget animation
-			Cast<UGlobalManager>(UGameplayStatics::GetGameInstance(GetWorld()))->PlayWidgetAnimation(pDeathScreen, "Fade");
+	// Get reference to audio manager
+	AAudioManager* pAudioMngr = Cast<AAudioManager>(
+		Cast<UGlobalManager>(
+		UGameplayStatics::GetGameInstance(GetWorld()))->GetService<AAudioManager>()
+	);
 
+	// Stop the boss music and go back to playing ambient music
+	pAudioMngr->StopBossMusic();
+	pAudioMngr->StartAmbience();
 
-			// Set timer for dodge attacking
-			FTimerHandle pTimerHandle;
-			GetWorld()->GetTimerManager().SetTimer(pTimerHandle, [&]()
-			{
-				// Stop the boss music and go back to playing ambient music
-				AAudioManager* pAudioMngr = Cast<AAudioManager>(UGameplayStatics::GetActorOfClass(GetWorld(), AAudioManager::StaticClass()));
-				pAudioMngr->StopBossMusic();
-				pAudioMngr->StartAmbience();
-
-				// Remove actor from arena
-				TeleportTo(m_vDeathLocation, GetActorRotation());
-
-				// END of executed code
-
-			}, 3, false);
-		}
-	}
+	// Remove actor from arena
+	TeleportTo(m_vDeathLocation, GetActorRotation());
 }

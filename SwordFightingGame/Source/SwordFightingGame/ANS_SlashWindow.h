@@ -28,7 +28,7 @@ public:
 
 	// Socket used for hurt box generation
 	UPROPERTY(EditAnywhere)
-	FString SocketName;
+	FString m_sSocketName;
 
 	// Radius of hit sphere or capsule
 	UPROPERTY(EditAnywhere)

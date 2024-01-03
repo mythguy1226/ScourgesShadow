@@ -13,6 +13,7 @@
 #include "Boss.h"
 #include "Kismet/GameplayStatics.h"
 #include "Components/AudioComponent.h"
+#include "GlobalManager.h"
 #include "AudioManager.h"
 
 ABoss_Controller::ABoss_Controller(FObjectInitializer const& a_pObjectInit)
@@ -75,7 +76,10 @@ void ABoss_Controller::HandleTargetDetection(AActor* a_pActor, FAIStimulus a_sSt
 			pBoss->m_bInCombat = true;
 
 			// Get the audio manager and stop the ambience to play the boss music
-			AAudioManager* pAudioMngr = Cast<AAudioManager>(UGameplayStatics::GetActorOfClass(GetWorld(), AAudioManager::StaticClass()));
+			AAudioManager* pAudioMngr = Cast<AAudioManager>(
+				Cast<UGlobalManager>(
+					UGameplayStatics::GetGameInstance(GetWorld()))->GetService<AAudioManager>()
+			);
 			pAudioMngr->StopAmbience();
 			pAudioMngr->StartBossMusic();
 		}

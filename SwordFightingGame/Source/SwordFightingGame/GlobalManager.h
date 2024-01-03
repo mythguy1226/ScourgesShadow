@@ -4,6 +4,8 @@
 
 #include "CoreMinimal.h"
 #include "Engine/GameInstance.h"
+#include "Kismet/GameplayStatics.h"
+#include "GlobalService.h"
 #include "GlobalManager.generated.h"
 
 /**
@@ -13,8 +15,29 @@ UCLASS()
 class SWORDFIGHTINGGAME_API UGlobalManager : public UGameInstance
 {
 	GENERATED_BODY()
-	
+private:
+	// Stores all services that can be referenced later
+	TArray<AActor*> m_aServices;
+
 public:
-	void PlayWidgetAnimation(UUserWidget* a_pWidget, FString a_sName, bool a_bReverse = false);
-	void PlayDelayedWidgetAnimation(UUserWidget* a_pWidget, FString a_sName, bool a_bReverse = false, float a_fDelay = 1.0f);
+	// Overridden methof for game instance initialization
+	virtual void Init() override;
+
+	// Method used for loading services into array
+	void LoadServices();
+
+	// Templated method for getting services of class type
+	template<class T>
+	AActor* GetService() 
+	{
+		// Iterate through services until desired class is found
+		for (AActor* pService : m_aServices)
+		{
+			// Check if correct class
+			if (Cast<T>(pService))
+				return pService;
+		}
+
+		return nullptr;
+	}
 };

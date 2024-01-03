@@ -5,10 +5,11 @@
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
 #include "Components/AudioComponent.h"
+#include "GlobalService.h"
 #include "AudioManager.generated.h"
 
 UCLASS()
-class SWORDFIGHTINGGAME_API AAudioManager : public AActor
+class SWORDFIGHTINGGAME_API AAudioManager : public AGlobalService
 {
 	GENERATED_BODY()
 	

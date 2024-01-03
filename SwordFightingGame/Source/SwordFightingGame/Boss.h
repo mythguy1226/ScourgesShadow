@@ -20,9 +20,6 @@ class SWORDFIGHTINGGAME_API ABoss : public ACharacter
 	TSubclassOf<class AActor> m_cSword;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = UserInterface, meta = (AllowPrivateAccess = "true"))
-	TSubclassOf<class UUserWidget> m_cEnemyDeathScreen;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = UserInterface, meta = (AllowPrivateAccess = "true"))
 	UWidgetComponent* m_pTargetLockWidget;
 
 	// Combat Component
@@ -71,7 +68,6 @@ public:
 	void PoundAttack();
 	AMoltenSword* m_pEquippedSword;
 
-	// Montage End Event Handler
-	UFUNCTION()
-	void HandleOnMontageEnded(UAnimMontage* a_pMontage, bool a_bInterrupted);
+	// Reset method
+	void Reset();
 };

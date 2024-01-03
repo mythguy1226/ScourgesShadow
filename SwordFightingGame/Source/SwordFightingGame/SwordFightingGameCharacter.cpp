@@ -13,6 +13,7 @@
 #include "Perception/AISense_Sight.h"
 #include "Boss.h"
 #include "Blueprint/UserWidget.h"
+#include "UIManager.h"
 #include "GlobalManager.h"
 
 //////////////////////////////////////////////////////////////////////////
@@ -126,7 +127,7 @@ void ASwordFightingGameCharacter::ToggleTargetLock()
 		ABoss* pBoss = Cast<ABoss>(UGameplayStatics::GetActorOfClass(GetWorld(), ABoss::StaticClass()));
 
 		// If the boss is valid then get the position and set lock pos to that position
-		if (pBoss != nullptr)
+		if (pBoss)
 		{
 			m_pTargetLockedBoss = pBoss;
 		}
@@ -186,29 +187,6 @@ void ASwordFightingGameCharacter::HandleOnMontageNotifyBegin(FName NotifyName, c
 	{
 		// Handle Getting up
 		GetMesh()->GetAnimInstance()->Montage_Play(m_pCombatComponent->m_pGetUpMontage);
-	}
-	else if (NotifyName.ToString() == "Death")
-	{
-		// Handle death here
-		if (m_cPlayerDeathScreen != nullptr)
-		{
-			// Get the death screen
-			UUserWidget* pDeathScreen = CreateWidget<UUserWidget>(Cast<APlayerController>(GetController()), m_cPlayerDeathScreen);
-			
-			// Play the death screen widget animation
-			Cast<UGlobalManager>(UGameplayStatics::GetGameInstance(GetWorld()))->PlayWidgetAnimation(pDeathScreen, "Fade");
-
-			// Ragdoll player
-			GetMesh()->SetSimulatePhysics(true);
-
-			// Set a timer to wait a few seconds and then restart level
-			FTimerHandle pTimerHandle;
-			GetWorld()->GetTimerManager().SetTimer(pTimerHandle, [&]()
-			{
-				UGameplayStatics::OpenLevel(GetWorld(), FName(GetWorld()->GetName()), true);
-
-			}, 2, false);
-		}
 	}
 	else // Attack Combos
 	{

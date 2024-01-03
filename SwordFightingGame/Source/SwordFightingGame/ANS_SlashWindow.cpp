@@ -11,7 +11,7 @@ void UANS_SlashWindow::NotifyBegin(USkeletalMeshComponent* MeshComp, UAnimSequen
 	UCombatComponent* combatComp = Cast<UCombatComponent>(owningActor->GetComponentByClass(UCombatComponent::StaticClass()));
 
 	// Hit location from socket
-	FVector pLocation = MeshComp->GetSocketLocation(FName(SocketName));
+	FVector pLocation = MeshComp->GetSocketLocation(FName(m_sSocketName));
 
 	// Generate a hit sphere at the slash location (if not continuous)
 	if(!m_bContinuousTracing)
@@ -36,7 +36,7 @@ void UANS_SlashWindow::NotifyTick(USkeletalMeshComponent* MeshComp, UAnimSequenc
 		UCombatComponent* combatComp = Cast<UCombatComponent>(owningActor->GetComponentByClass(UCombatComponent::StaticClass()));
 
 		// Hit location from socket
-		FVector pLocation = MeshComp->GetSocketLocation(FName(SocketName));
+		FVector pLocation = MeshComp->GetSocketLocation(FName(m_sSocketName));
 		vSlashEnd = pLocation;
 
 		// Generate the hit capsule 
@@ -58,7 +58,7 @@ void UANS_SlashWindow::NotifyEnd(USkeletalMeshComponent* MeshComp, UAnimSequence
 	UCombatComponent* combatComp = Cast<UCombatComponent>(owningActor->GetComponentByClass(UCombatComponent::StaticClass()));
 
 	// Hit location from socket
-	FVector pLocation = MeshComp->GetSocketLocation(FName(SocketName));
+	FVector pLocation = MeshComp->GetSocketLocation(FName(m_sSocketName));
 	vSlashEnd = pLocation;
 
 	// Generate the hit capsule 
