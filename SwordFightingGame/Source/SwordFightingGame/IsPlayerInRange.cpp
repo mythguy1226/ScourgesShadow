@@ -5,6 +5,7 @@
 #include "Kismet/GameplayStatics.h"
 #include "Boss_Controller.h"
 #include "BehaviorTree/BlackboardComponent.h"
+#include "GameFramework/Character.h"
 #include "BossKeys.h"
 
 UIsPlayerInRange::UIsPlayerInRange()
@@ -18,13 +19,9 @@ void UIsPlayerInRange::OnBecomeRelevant(UBehaviorTreeComponent& a_pTreeComp, uin
 	// Super Call 
 	Super::OnBecomeRelevant(a_pTreeComp, a_pNodeMem);
 
-	// Get AI Controller and pawn
-	ABoss_Controller* pAIController = Cast<ABoss_Controller>(a_pTreeComp.GetAIOwner());
-	APawn* pBoss = pAIController->GetPawn();
-
-	// Get Player Controller and pawn
-	APlayerController* pPlayerController = UGameplayStatics::GetPlayerController(GetWorld(), 0);
+	// Get blackboard from ai controller
+	UBlackboardComponent* pBlackboard = Cast<UBlackboardComponent>(a_pTreeComp.GetAIOwner()->GetComponentByClass(UBlackboardComponent::StaticClass()));
 
 	// Set blackboard key to whether or not player is in range
-	pAIController->GetBlackboard()->SetValueAsBool(BossKeys::isPlayerInRange, pBoss->GetDistanceTo(pPlayerController->GetPawn()) <= m_fRange);
+	pBlackboard->SetValueAsBool(GetSelectedBlackboardKey(), a_pTreeComp.GetAIOwner()->GetPawn()->GetDistanceTo(Cast<AActor>(UGameplayStatics::GetPlayerCharacter(GetWorld(), 0))) <= m_fRange);
 }

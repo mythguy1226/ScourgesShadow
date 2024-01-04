@@ -17,11 +17,11 @@ bool UBTD_IsPlayerInRange::CalculateRawConditionValue(UBehaviorTreeComponent& a_
 	bool bSuccess = Super::CalculateRawConditionValue(a_pTreeComp, a_pNodeMem);
 	if (!bSuccess) return false;
 
-	// Get the controller
-	ABoss_Controller* pController = Cast<ABoss_Controller>(a_pTreeComp.GetAIOwner());
+	// Get blackboard from ai controller
+	UBlackboardComponent* pBlackboard = Cast<UBlackboardComponent>(a_pTreeComp.GetAIOwner()->GetComponentByClass(UBlackboardComponent::StaticClass()));
 
 	// Get the player in range value from key
-	bool inRange = pController->GetBlackboard()->GetValueAsBool(BossKeys::isPlayerInRange);
+	bool inRange = pBlackboard->GetValueAsBool(BossKeys::isPlayerInRange);
 
 	// Return the key value
 	return inRange;

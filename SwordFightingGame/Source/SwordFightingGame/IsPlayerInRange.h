@@ -22,5 +22,5 @@ public:
 
 	// Field for range
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "AI")
-		float m_fRange = 100.0f;
+	float m_fRange = 100.0f;
 };

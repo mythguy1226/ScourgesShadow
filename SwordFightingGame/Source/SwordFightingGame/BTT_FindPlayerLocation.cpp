@@ -15,9 +15,6 @@ UBTT_FindPlayerLocation::UBTT_FindPlayerLocation(FObjectInitializer const& a_pOb
 
 EBTNodeResult::Type UBTT_FindPlayerLocation::ExecuteTask(UBehaviorTreeComponent& a_pTreeComp, uint8* a_pNodeMem)
 {
-	// Get AI Controller
-	auto const pAIController = Cast<ABoss_Controller>(a_pTreeComp.GetAIOwner());
-
 	// Get Nav System
 	UNavigationSystemV1* pNavSystem = UNavigationSystemV1::GetCurrent(GetWorld());
 
@@ -25,10 +22,13 @@ EBTNodeResult::Type UBTT_FindPlayerLocation::ExecuteTask(UBehaviorTreeComponent&
 	APlayerController* pPlayerController = UGameplayStatics::GetPlayerController(GetWorld(), 0);
 	APawn* pPlayer = pPlayerController->GetPawn();
 
+	// Get blackboard from ai controller
+	UBlackboardComponent* pBlackboard = Cast<UBlackboardComponent>(a_pTreeComp.GetAIOwner()->GetComponentByClass(UBlackboardComponent::StaticClass()));
+
 	if (pNavSystem)
 	{
 		// Setting target location to player location
-		pAIController->GetBlackboard()->SetValueAsVector(BossKeys::targetLocation, pPlayer->GetActorLocation());
+		pBlackboard->SetValueAsVector(GetSelectedBlackboardKey(), pPlayer->GetActorLocation());
 	}
 
 	// Finish execution

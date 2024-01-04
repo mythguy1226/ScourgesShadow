@@ -14,22 +14,26 @@ AAudioManager::AAudioManager()
 
 void AAudioManager::StartAmbience()
 {
-	m_pDungeonAmbienceComp->Play();
+	if(m_pDungeonAmbienceComp)
+		m_pDungeonAmbienceComp->Play();
 }
 
 void AAudioManager::StopAmbience()
 {
-	m_pDungeonAmbienceComp->Stop();
+	if (m_pDungeonAmbienceComp)
+		m_pDungeonAmbienceComp->Stop();
 }
 
 void AAudioManager::StartBossMusic()
 {
-	m_pBossMusicComp->Play();
+	if(m_pBossMusicComp)
+		m_pBossMusicComp->Play();
 }
 
 void AAudioManager::StopBossMusic()
 {
-	m_pBossMusicComp->Stop();
+	if (m_pBossMusicComp)
+		m_pBossMusicComp->Stop();
 }
 
 // Called when the game starts or when spawned

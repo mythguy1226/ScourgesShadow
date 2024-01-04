@@ -16,26 +16,19 @@ UBTT_ChasePlayer::UBTT_ChasePlayer(FObjectInitializer const& a_pObjectInit)
 
 EBTNodeResult::Type UBTT_ChasePlayer::ExecuteTask(UBehaviorTreeComponent& a_pTreeComp, uint8* a_pNodeMem)
 {
-	// Get AI Controller
-	auto const pAIController = Cast<ABoss_Controller>(a_pTreeComp.GetAIOwner());
-
 	// Get Nav System
 	UNavigationSystemV1* pNavSystem = UNavigationSystemV1::GetCurrent(GetWorld());
 
 	if (pNavSystem)
 	{
-		// Get the boss ref
-		ABoss* pBoss = Cast<ABoss>(pAIController->GetPawn());
-		
-		// Only chase if alive
-		if (pBoss->GetCombatComponent()->m_fHealth > 0)
-		{
-			// Get location of the player
-			FVector pLocation = pAIController->GetBlackboard()->GetValueAsVector(BossKeys::targetLocation);
+		// Get blackboard from ai controller
+		UBlackboardComponent* pBlackboard = Cast<UBlackboardComponent>(a_pTreeComp.GetAIOwner()->GetComponentByClass(UBlackboardComponent::StaticClass()));
 
-			// Tell the AI to move towards player
-			pAIController->MoveToLocation(pLocation);
-		}
+		// Get location of the player
+		FVector pLocation = pBlackboard->GetValueAsVector(GetSelectedBlackboardKey());
+
+		// Tell the AI to move towards player
+		a_pTreeComp.GetAIOwner()->MoveToLocation(pLocation);
 	}
 
 	// Finish execution

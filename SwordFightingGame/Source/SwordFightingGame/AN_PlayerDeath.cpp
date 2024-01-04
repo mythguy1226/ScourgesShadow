@@ -6,11 +6,6 @@
 
 void UAN_PlayerDeath::Notify(USkeletalMeshComponent* MeshComp, UAnimSequenceBase* Animation, const FAnimNotifyEventReference& EventReference)
 {
-	// Set a timer to wait a few seconds and then restart level
-	FTimerHandle pTimerHandle;
-	MeshComp->GetOwner()->GetWorld()->GetTimerManager().SetTimer(pTimerHandle, [&]()
-	{
-		UGameplayStatics::OpenLevel(GetWorld(), FName(MeshComp->GetOwner()->GetWorld()->GetName()), true);
-
-	}, 2, false);
+	// Restart the level
+	UGameplayStatics::OpenLevel(MeshComp->GetOwner()->GetWorld(), FName(MeshComp->GetOwner()->GetWorld()->GetName()), true);
 }
