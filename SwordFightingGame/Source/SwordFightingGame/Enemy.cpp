@@ -2,6 +2,8 @@
 
 
 #include "Enemy.h"
+#include "SwordFightingGameCharacter.h"
+#include "TargetLockComponent.h"
 
 // Sets default values
 AEnemy::AEnemy()
@@ -13,6 +15,11 @@ AEnemy::AEnemy()
 	m_pHealthBarWidget = CreateDefaultSubobject<UWidgetComponent>(TEXT("Health Bar"));
 	m_pHealthBarWidget->SetRelativeLocation(FVector(0.0f, 0.0f, 100.0f));
 	m_pHealthBarWidget->SetupAttachment(RootComponent);
+
+	// Set up the target-lock widget
+	m_pTargetLockWidget = CreateDefaultSubobject<UWidgetComponent>(TEXT("Target Point"));
+	m_pTargetLockWidget->SetRelativeLocation(FVector(0.0f, 0.0f, 25.0f));
+	m_pTargetLockWidget->SetupAttachment(RootComponent);
 
 	// Set up the combat component
 	m_pCombatComponent = CreateDefaultSubobject<UCombatComponent>(TEXT("Combat Component"));
@@ -42,6 +49,10 @@ void AEnemy::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
 
 void AEnemy::Reset()
 {
+	// Get the player's target lock component and disable target locking
+	ASwordFightingGameCharacter* pPlayer = Cast<ASwordFightingGameCharacter>(UGameplayStatics::GetPlayerCharacter(GetWorld(), 0));
+	Cast<UTargetLockComponent>(pPlayer->GetComponentByClass(UTargetLockComponent::StaticClass()))->DisableLock();
+
 	// Update combat status
 	m_bInCombat = false;
 

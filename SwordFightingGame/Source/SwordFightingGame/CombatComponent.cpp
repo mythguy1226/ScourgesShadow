@@ -6,6 +6,7 @@
 #include "SwordFightingGameCharacter.h"
 #include "EvasionComponent.h"
 #include "GameFramework/CharacterMovementComponent.h"
+#include "Enemy.h"
 
 // Sets default values for this component's properties
 UCombatComponent::UCombatComponent()
@@ -74,6 +75,8 @@ void UCombatComponent::GenerateHitSphere(FVector a_vLocation, float a_fRadius, F
 				continue;
 			else // Add to set if not
 				m_sDamagedActors.Add(i->GetActor());
+			if (Cast<AEnemy>(i->GetActor()) && Cast<AEnemy>(GetOwner()))
+				continue;
 
 			// Try casting actor to a character
 			ACharacter* pVictim = Cast<ACharacter>(i->GetActor());
@@ -125,6 +128,8 @@ void UCombatComponent::GenerateHitCapsule(FVector a_vBeginLoc, FVector a_vEndLoc
 				continue;
 			else // Add to set if not
 				m_sDamagedActors.Add(i->GetActor());
+			if (Cast<AEnemy>(i->GetActor()) && Cast<AEnemy>(GetOwner()))
+				continue;
 
 			// Try casting actor to a character
 			ACharacter* pVictim = Cast<ACharacter>(i->GetActor());

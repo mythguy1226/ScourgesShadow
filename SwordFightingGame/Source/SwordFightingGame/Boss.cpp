@@ -10,6 +10,7 @@
 #include "GlobalManager.h"
 #include "UIManager.h"
 #include "GameFramework/CharacterMovementComponent.h"
+#include "TargetLockComponent.h"
 
 // Sets default values
 ABoss::ABoss()
@@ -112,6 +113,10 @@ void ABoss::PoundAttack()
 
 void ABoss::Reset()
 {
+	// Get the player's target lock component and disable target locking
+	ASwordFightingGameCharacter* pPlayer = Cast<ASwordFightingGameCharacter>(UGameplayStatics::GetPlayerCharacter(GetWorld(), 0));
+	Cast<UTargetLockComponent>(pPlayer->GetComponentByClass(UTargetLockComponent::StaticClass()))->DisableLock();
+
 	// Update combat status
 	m_bInCombat = false;
 

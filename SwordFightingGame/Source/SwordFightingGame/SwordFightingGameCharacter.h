@@ -9,6 +9,7 @@
 #include "CombatComponent.h"
 #include "PlayerStatsComponent.h"
 #include "EvasionComponent.h"
+#include "TargetLockComponent.h"
 #include "SwordFightingGameCharacter.generated.h"
 
 UCLASS(config=Game)
@@ -35,6 +36,10 @@ class ASwordFightingGameCharacter : public ACharacter
 	// Evasion Component
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
 	UEvasionComponent* m_pEvasionComponent;
+
+	// Target locking Component
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
+	UTargetLockComponent* m_pTargetLockComponent;
 
 	// Reference to HUD class
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "UserInterface", meta = (AllowPrivateAccess = "true"))
@@ -82,6 +87,7 @@ public:
 	ABoss* m_pTargetLockedBoss;
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
 	bool m_bIsTargetLocked = false;
+	void LockOnNextTarget(float Value);
 
 protected:
 	// Called upon begin of play

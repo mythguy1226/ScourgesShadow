@@ -80,6 +80,9 @@ void ABoss_Controller::HandleTargetDetection(AActor* a_pActor, FAIStimulus a_sSt
 				Cast<UGlobalManager>(
 					UGameplayStatics::GetGameInstance(GetWorld()))->GetService<AAudioManager>()
 			);
+			if (!pAudioMngr)
+				return;
+
 			pAudioMngr->StopAmbience();
 			pAudioMngr->StartBossMusic();
 		}

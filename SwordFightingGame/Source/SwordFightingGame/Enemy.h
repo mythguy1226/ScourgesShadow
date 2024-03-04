@@ -26,6 +26,9 @@ class SWORDFIGHTINGGAME_API AEnemy : public ACharacter
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = UserInterface, meta = (AllowPrivateAccess = "true"))
 	UWidgetComponent* m_pHealthBarWidget;
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = UserInterface, meta = (AllowPrivateAccess = "true"))
+	UWidgetComponent* m_pTargetLockWidget;
+
 public:
 	// Sets default values for this character's properties
 	AEnemy();

@@ -66,6 +66,8 @@ ASwordFightingGameCharacter::ASwordFightingGameCharacter()
 
 	m_pEvasionComponent = CreateDefaultSubobject<UEvasionComponent>(TEXT("Evasion Component"));
 
+	m_pTargetLockComponent = CreateDefaultSubobject<UTargetLockComponent>(TEXT("Target Lock Component"));
+
 	SetupStimulus();
 }
 
@@ -111,27 +113,21 @@ void ASwordFightingGameCharacter::Dodge()
 		m_pStatsComponent->UseStamina(10.0f);
 
 		// Call Dodge from evasion component
-		m_pEvasionComponent->Dodge(m_bIsSprinting, m_bIsTargetLocked);
+		m_pEvasionComponent->Dodge(m_bIsSprinting, m_pTargetLockComponent->m_bIsTargetLocked);
 	}
 }
 
 void ASwordFightingGameCharacter::ToggleTargetLock()
 {
-	// Toggle the target lock
-	m_bIsTargetLocked = !m_bIsTargetLocked;
+	// Call upon component's target lock
+	m_pTargetLockComponent->ToggleTargetLock();
+}
 
-	// If locking, get the closest enemy position
-	if (m_bIsTargetLocked)
-	{
-		// Try to get the boss
-		ABoss* pBoss = Cast<ABoss>(UGameplayStatics::GetActorOfClass(GetWorld(), ABoss::StaticClass()));
-
-		// If the boss is valid then get the position and set lock pos to that position
-		if (pBoss)
-		{
-			m_pTargetLockedBoss = pBoss;
-		}
-	}
+void ASwordFightingGameCharacter::LockOnNextTarget(float Value)
+{
+	// Only call this method upon change in axis and when locked
+	if(Value != 0.0f && m_pTargetLockComponent->m_bIsTargetLocked)
+		m_pTargetLockComponent->GetNextTarget(Value);
 }
 
 void ASwordFightingGameCharacter::SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent)
@@ -155,13 +151,15 @@ void ASwordFightingGameCharacter::SetupPlayerInputComponent(class UInputComponen
 
 	// Attack Bindings
 	PlayerInputComponent->BindAction("PrimaryAttack", IE_Pressed, this, &ASwordFightingGameCharacter::HeavyAttack);
+	PlayerInputComponent->BindAction("HeavyAttack / Controller", IE_Pressed, this, &ASwordFightingGameCharacter::HeavyAttack);
 	PlayerInputComponent->BindAction("PrimaryAttack", IE_Released, this, &ASwordFightingGameCharacter::LightAttack);
 
 	// Dodge Bindings
 	PlayerInputComponent->BindAction("Dodge", IE_Pressed, this, &ASwordFightingGameCharacter::Dodge);
 
-	// Target Lock Binding
+	// Target Lock Bindings
 	PlayerInputComponent->BindAction("TargetLock", IE_Pressed, this, &ASwordFightingGameCharacter::ToggleTargetLock);
+	PlayerInputComponent->BindAxis("Mouse Scroll", this, &ASwordFightingGameCharacter::LockOnNextTarget);
 
 
 	// We have 2 versions of the rotation bindings to handle different kinds of devices differently
@@ -199,9 +197,9 @@ void ASwordFightingGameCharacter::HandleOnMontageNotifyBegin(FName NotifyName, c
 			return;
 		}
 		if(m_iComboIndex >= 0)
-			m_pStatsComponent->UseStamina(20.0f);
+			m_pStatsComponent->UseStamina(5.0f);
 
-		if (m_iComboIndex < 0 || !m_pStatsComponent->DoesMeetStaminaRequirement(20.0f))
+		if (m_iComboIndex < 0 || !m_pStatsComponent->DoesMeetStaminaRequirement(5.0f))
 		{
 			m_pCombatComponent->StopAttack(0.35f, "LightAttack");
 		}
@@ -274,11 +272,11 @@ void ASwordFightingGameCharacter::LightAttack()
 			if (m_bIsSprinting)
 			{
 				// Handle stamina
-				if (!m_pStatsComponent->DoesMeetStaminaRequirement(20.0f))
+				if (!m_pStatsComponent->DoesMeetStaminaRequirement(5.0f))
 				{
 					return;
 				}
-				m_pStatsComponent->UseStamina(20.0f);
+				m_pStatsComponent->UseStamina(5.0f);
 
 				m_pCombatComponent->Attack("SprintAttack");
 			}
@@ -288,11 +286,11 @@ void ASwordFightingGameCharacter::LightAttack()
 				if (m_pEvasionComponent->m_bCanAttackAfterDodge)
 				{
 					// Handle stamina
-					if (!m_pStatsComponent->DoesMeetStaminaRequirement(20.0f))
+					if (!m_pStatsComponent->DoesMeetStaminaRequirement(5.0f))
 					{
 						return;
 					}
-					m_pStatsComponent->UseStamina(20.0f);
+					m_pStatsComponent->UseStamina(5.0f);
 
 					m_pCombatComponent->Attack("DodgeAttack");
 					m_pEvasionComponent->m_bCanAttackAfterDodge = false;
@@ -300,11 +298,11 @@ void ASwordFightingGameCharacter::LightAttack()
 				else
 				{
 					// Handle stamina
-					if (!m_pStatsComponent->DoesMeetStaminaRequirement(20.0f))
+					if (!m_pStatsComponent->DoesMeetStaminaRequirement(5.0f))
 					{
 						return;
 					}
-					m_pStatsComponent->UseStamina(20.0f);
+					m_pStatsComponent->UseStamina(5.0f);
 
 					m_pCombatComponent->Attack("LightAttack");
 				}
@@ -339,11 +337,11 @@ void ASwordFightingGameCharacter::HeavyAttack()
 					if (m_bIsCharging)
 					{
 						// Handle stamina
-						if (!m_pStatsComponent->DoesMeetStaminaRequirement(30.0f))
+						if (!m_pStatsComponent->DoesMeetStaminaRequirement(15.0f))
 						{
 							return;
 						}
-						m_pStatsComponent->UseStamina(30.0f);
+						m_pStatsComponent->UseStamina(15.0f);
 
 						m_pCombatComponent->Attack("HeavyAttack");
 						m_bIsCharging = false;
@@ -356,11 +354,11 @@ void ASwordFightingGameCharacter::HeavyAttack()
 	else // Jump Attacking (In Mid-Air)
 	{
 		// Handle stamina
-		if (!m_pStatsComponent->DoesMeetStaminaRequirement(20.0f))
+		if (!m_pStatsComponent->DoesMeetStaminaRequirement(5.0f))
 		{
 			return;
 		}
-		m_pStatsComponent->UseStamina(20.0f);
+		m_pStatsComponent->UseStamina(5.0f);
 
 		m_pCombatComponent->Attack("JumpAttack");
 	}
@@ -368,12 +366,20 @@ void ASwordFightingGameCharacter::HeavyAttack()
 
 void ASwordFightingGameCharacter::TurnAtRate(float Rate)
 {
+	// Return early if slight drift in value
+	if (FMath::Abs(Rate) <= 0.1f)
+		return;
+
 	// calculate delta for this frame from the rate information
 	AddControllerYawInput(Rate * TurnRateGamepad * GetWorld()->GetDeltaSeconds());
 }
 
 void ASwordFightingGameCharacter::LookUpAtRate(float Rate)
 {
+	// Return early if slight drift in value
+	if (FMath::Abs(Rate) <= 0.1f)
+		return;
+
 	// calculate delta for this frame from the rate information
 	AddControllerPitchInput(Rate * TurnRateGamepad * GetWorld()->GetDeltaSeconds());
 }
@@ -398,24 +404,34 @@ void ASwordFightingGameCharacter::BeginPlay()
 		UUserWidget* HUD = CreateWidget<UUserWidget>(Cast<APlayerController>(GetController()), m_cPlayerHUD);
 		HUD->AddToViewport(9999);
 	}
+
+	// Load global manager services
+	Cast<UGlobalManager>(UGameplayStatics::GetGameInstance(GetWorld()))->LoadServices();
+
 }
 
 void ASwordFightingGameCharacter::Tick(float a_fDeltaTime)
 {
 	// Check if player is target locked
-	if (m_bIsTargetLocked)
+	if (m_pTargetLockComponent->m_bIsTargetLocked)
 	{
-		// Get the lock rotation
-		FVector lockLocation = m_pTargetLockedBoss->GetActorLocation() + FVector(0.0f, 0.0f, -100.0f);
-		FVector Forward = FVector(lockLocation.X, lockLocation.Y, GetActorLocation().Z) - GetActorLocation();
-
-		//FRotator Rot = UKismetMathLibrary::MakeRotFromXZ(Forward, FVector::UpVector);
-		FRotator Rot = UKismetMathLibrary::FindLookAtRotation(GetActorLocation(), lockLocation);
-		FRotator ActorRot = UKismetMathLibrary::FindLookAtRotation(GetActorLocation(), m_pTargetLockedBoss->GetActorLocation());
-
-		// Set controller rotation to the new lock rotation
-		GetController()->SetControlRotation(Rot);
-		SetActorRotation(ActorRot);
+		// Check that actor is valid
+		if (m_pTargetLockComponent->m_pTargetLockedActor)
+		{
+			// Get the lock rotation
+			FVector lockLocation = m_pTargetLockComponent->m_pTargetLockedActor->GetActorLocation() + FVector(0.0f, 0.0f, -100.0f);
+			FRotator Rot = UKismetMathLibrary::FindLookAtRotation(GetActorLocation(), lockLocation);
+			
+			// Get target locked location without Z value
+			FVector vLookAtLoc = FVector(m_pTargetLockComponent->m_pTargetLockedActor->GetActorLocation().X, m_pTargetLockComponent->m_pTargetLockedActor->GetActorLocation().Y, GetActorLocation().Z);
+			
+			// Set controller rotation to the new lock rotation
+			GetController()->SetControlRotation(Rot);
+			
+			// Set the actor rotation
+			FRotator ActorRot = UKismetMathLibrary::FindLookAtRotation(GetActorLocation(), vLookAtLoc);
+			SetActorRotation(ActorRot);
+		}
 	}
 
 	// Handle Sprinting and Stamina
@@ -432,6 +448,10 @@ void ASwordFightingGameCharacter::Tick(float a_fDeltaTime)
 
 void ASwordFightingGameCharacter::MoveForward(float Value)
 {
+	// Return early if slight drift in value
+	if (FMath::Abs(Value) <= 0.1f)
+		return;
+
 	if (!m_pCombatComponent->IsAttacking() && !m_pCombatComponent->m_bIsBlocking && !m_pCombatComponent->IsStaggered() && !m_pCombatComponent->IsDying())
 	{
 		if ((Controller != nullptr) && (Value != 0.0f))
@@ -449,6 +469,10 @@ void ASwordFightingGameCharacter::MoveForward(float Value)
 
 void ASwordFightingGameCharacter::MoveRight(float Value)
 {
+	// Return early if slight drift in value
+	if (FMath::Abs(Value) <= 0.1f)
+		return;
+
 	if (!m_pCombatComponent->IsAttacking() && !m_pCombatComponent->m_bIsBlocking && !m_pCombatComponent->IsStaggered() && !m_pCombatComponent->IsDying())
 	{
 		if ((Controller != nullptr) && (Value != 0.0f))
