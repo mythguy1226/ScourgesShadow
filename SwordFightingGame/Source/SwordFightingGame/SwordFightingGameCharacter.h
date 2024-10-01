@@ -89,6 +89,9 @@ public:
 	bool m_bIsTargetLocked = false;
 	void LockOnNextTarget(float Value);
 
+	// Handle healing
+	void Heal();
+
 protected:
 	// Called upon begin of play
 	virtual void BeginPlay();

@@ -20,6 +20,7 @@ public:
 	// Overrides
 	void BeginPlay() override;
 	void OnPossess(APawn* a_pPawn) override;
+	void SetActive(bool a_bActive);
 
 	// Method to get black board
 	class UBlackboardComponent* GetBlackboard() const;
@@ -35,9 +36,4 @@ private:
 	class UBlackboardComponent* m_pBlackboard;
 
 	class UAISenseConfig_Sight* m_pSightConfig;
-
-	UFUNCTION()
-	void HandleTargetDetection(AActor* a_pActor, FAIStimulus a_sStimulus);
-
-	void SetupPerception();
 };

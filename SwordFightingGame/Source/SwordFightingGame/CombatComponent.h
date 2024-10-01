@@ -112,4 +112,15 @@ public:
 	void TakeDamage(float a_fDamage);
 	void Die();
 
+	// Methods for handling healing
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	int m_iNumHeals = 3;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	float m_fHealAmount = 25.0f;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	UAnimMontage* m_pHealMontage;
+	void InitiateHeal();
+	void Heal();
+	bool CanHeal();
+
 };

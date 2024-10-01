@@ -401,3 +401,39 @@ void UCombatComponent::Die()
 	Cast<ACharacter>(GetOwner())->GetCharacterMovement()->DisableMovement();
 }
 
+void UCombatComponent::InitiateHeal()
+{
+	// Get owner of component and then get their animator
+	UAnimInstance* pAnimInst = Cast<ACharacter>(GetOwner())->GetMesh()->GetAnimInstance();
+
+	// Return early if the anim instance wasn't found
+	if (!pAnimInst)
+		return;
+
+	// Play the death montage and death sound
+	if (m_pHealMontage)
+		pAnimInst->Montage_Play(m_pHealMontage);
+}
+
+void UCombatComponent::Heal()
+{
+	// Increase health by amount and cap to max
+	m_fHealth += m_fHealAmount;
+	if (m_fHealth > m_fMaxHealth)
+		m_fHealth = m_fMaxHealth;
+
+	// Decrease number of heals
+	m_iNumHeals--;
+}
+
+bool UCombatComponent::CanHeal()
+{
+	// Get evasive component to check if player tries to heal mid-dodge
+	UEvasionComponent* pEvasiveComp = Cast<UEvasionComponent>(GetOwner()->GetComponentByClass(UEvasionComponent::StaticClass()));
+	bool bDodging = false;
+	if (pEvasiveComp)
+		bDodging = pEvasiveComp->m_bIsDodging;
+
+	// Returns whether or not player can heal
+	return m_iNumHeals > 0 && !IsAttacking() && !bDodging;
+}

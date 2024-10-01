@@ -130,6 +130,16 @@ void ASwordFightingGameCharacter::LockOnNextTarget(float Value)
 		m_pTargetLockComponent->GetNextTarget(Value);
 }
 
+void ASwordFightingGameCharacter::Heal()
+{
+	// Ensure combat component is valid
+	// and that player has any heals to use,
+	// then heal if all checks pass
+	if (m_pCombatComponent)
+		if (m_pCombatComponent->CanHeal())
+			m_pCombatComponent->InitiateHeal();
+}
+
 void ASwordFightingGameCharacter::SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent)
 {
 	// Set up gameplay key bindings
@@ -161,6 +171,8 @@ void ASwordFightingGameCharacter::SetupPlayerInputComponent(class UInputComponen
 	PlayerInputComponent->BindAction("TargetLock", IE_Pressed, this, &ASwordFightingGameCharacter::ToggleTargetLock);
 	PlayerInputComponent->BindAxis("Mouse Scroll", this, &ASwordFightingGameCharacter::LockOnNextTarget);
 
+	// Heal Binding
+	PlayerInputComponent->BindAction("Heal", IE_Pressed, this, &ASwordFightingGameCharacter::Heal);
 
 	// We have 2 versions of the rotation bindings to handle different kinds of devices differently
 	// "turn" handles devices that provide an absolute delta, such as a mouse.
