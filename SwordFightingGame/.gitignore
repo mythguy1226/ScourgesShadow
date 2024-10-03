@@ -74,4 +74,5 @@ Plugins/*/Intermediate/*
 DerivedDataCache/*
 
 # Ignore Assets, this repo will mainly contain the source code
-Content/*
+Content/RollsAndDodges/*
+Content/MedievalDungeon/*
