@@ -10,13 +10,6 @@
 
 ABoss_Controller::ABoss_Controller(FObjectInitializer const& a_pObjectInit)
 {
-	// Get the behavior tree from reference
-	static ConstructorHelpers::FObjectFinder<UBehaviorTree> treeFinder(TEXT("BehaviorTree'/Game/SwordFightingGame/AI/BT_BossBT.BT_BossBT'"));
-	if (treeFinder.Succeeded())
-	{
-		m_pBehaviorTree = treeFinder.Object;
-	}
-
 	// Init the tree and blackboard components
 	m_pBehaviorTreeComponent = a_pObjectInit.CreateDefaultSubobject<UBehaviorTreeComponent>(this, TEXT("BehaviorTree Component"));
 	m_pBlackboard = a_pObjectInit.CreateDefaultSubobject<UBlackboardComponent>(this, TEXT("Blackboard Component"));

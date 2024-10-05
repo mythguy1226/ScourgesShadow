@@ -26,10 +26,10 @@ public:
 	class UBlackboardComponent* GetBlackboard() const;
 
 	// Tree components
-	UPROPERTY(EditInstanceOnly, BlueprintReadWrite, Category = "AI")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	class UBehaviorTreeComponent* m_pBehaviorTreeComponent;
 
-	UPROPERTY(EditInstanceOnly, BlueprintReadWrite, Category = "AI")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	class UBehaviorTree* m_pBehaviorTree;
 
 private:
