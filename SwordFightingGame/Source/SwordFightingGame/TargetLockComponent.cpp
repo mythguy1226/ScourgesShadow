@@ -5,6 +5,7 @@
 #include "Kismet/GameplayStatics.h"
 #include "Enemy.h"
 #include "Boss.h"
+#include "Camera/CameraComponent.h"
 
 // Sets default values for this component's properties
 UTargetLockComponent::UTargetLockComponent()
@@ -44,8 +45,11 @@ void UTargetLockComponent::ToggleTargetLock()
 		return;
 	}
 
+	// Get player camera component
+	UCameraComponent* pCamComp = Cast<UCameraComponent>(GetOwner()->GetComponentByClass(UCameraComponent::StaticClass()));
+
 	// Generate a lock query to find an actor to lock onto
-	GenerateLockQuery(GetOwner()->GetActorLocation(), GetOwner()->GetActorForwardVector(), m_fLockQueryRange, m_fLockQueryRadius, m_bDebugMode);
+	GenerateLockQuery(pCamComp->GetComponentLocation(), pCamComp->GetForwardVector(), m_fLockQueryRange, m_fLockQueryRadius, m_bDebugMode);
 }
 
 void UTargetLockComponent::GenerateLockQuery(FVector a_vBeginLoc, FVector a_vForward, float a_fRange, float a_fRadius, bool a_bDebug)
