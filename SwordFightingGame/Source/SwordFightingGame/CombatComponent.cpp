@@ -435,5 +435,5 @@ bool UCombatComponent::CanHeal()
 		bDodging = pEvasiveComp->m_bIsDodging;
 
 	// Returns whether or not player can heal
-	return m_iNumHeals > 0 && !IsAttacking() && !bDodging;
+	return m_iNumHeals > 0 && !IsAttacking() && !IsStaggered() && !bDodging;
 }

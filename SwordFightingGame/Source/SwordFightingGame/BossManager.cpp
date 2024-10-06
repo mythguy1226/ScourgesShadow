@@ -34,6 +34,10 @@ void ABossManager::Tick(float DeltaTime)
 
 void ABossManager::StartBossFight()
 {
+	// Ensure fight isnt alredy started
+	if (m_bFightActive)
+		return;
+
 	// Get the active boss' controller and cast to an enemy controller
 	if (m_pActiveBoss)
 	{
@@ -54,14 +58,6 @@ void ABossManager::StartBossFight()
 				m_pBossBar = CreateWidget<UUserWidget>(pPlayerController, m_cBossBarUI);
 				m_pBossBar->AddToViewport(9999);
 			}
-		}
-
-		ABoss* pBoss = Cast<ABoss>(pController->GetPawn());
-
-		// Check for initial combat status
-		if (!pBoss->m_bInCombat)
-		{
-			pBoss->m_bInCombat = true;
 
 			// Get the audio manager and stop the ambience to play the boss music
 			AAudioManager* pAudioMngr = Cast<AAudioManager>(
@@ -85,5 +81,16 @@ void ABossManager::EndBossFight()
 
 	// Remove boss bar from viewport
 	m_pBossBar->RemoveFromViewport();
+
+	// Get the audio manager and stop the ambience to play the boss music
+	AAudioManager* pAudioMngr = Cast<AAudioManager>(
+		Cast<UGlobalManager>(
+			UGameplayStatics::GetGameInstance(GetWorld()))->GetService<AAudioManager>()
+	);
+	if (!pAudioMngr)
+		return;
+
+	pAudioMngr->StopBossMusic();
+	pAudioMngr->StartAmbience();
 }
 
