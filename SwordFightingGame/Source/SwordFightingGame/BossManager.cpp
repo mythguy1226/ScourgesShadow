@@ -60,10 +60,7 @@ void ABossManager::StartBossFight()
 			}
 
 			// Get the audio manager and stop the ambience to play the boss music
-			AAudioManager* pAudioMngr = Cast<AAudioManager>(
-				Cast<UGlobalManager>(
-					UGameplayStatics::GetGameInstance(GetWorld()))->GetService<AAudioManager>()
-			);
+			AAudioManager* pAudioMngr = Cast<AAudioManager>(UGameplayStatics::GetActorOfClass(GetWorld(), AAudioManager::StaticClass()));
 			if (!pAudioMngr)
 				return;
 
@@ -82,11 +79,8 @@ void ABossManager::EndBossFight()
 	// Remove boss bar from viewport
 	m_pBossBar->RemoveFromViewport();
 
-	// Get the audio manager and stop the ambience to play the boss music
-	AAudioManager* pAudioMngr = Cast<AAudioManager>(
-		Cast<UGlobalManager>(
-			UGameplayStatics::GetGameInstance(GetWorld()))->GetService<AAudioManager>()
-	);
+	// Get the audio manager and stop the boss music to play the ambience
+	AAudioManager* pAudioMngr = Cast<AAudioManager>(UGameplayStatics::GetActorOfClass(GetWorld(), AAudioManager::StaticClass()));
 	if (!pAudioMngr)
 		return;
 
