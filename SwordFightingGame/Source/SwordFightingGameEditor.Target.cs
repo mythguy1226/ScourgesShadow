@@ -8,7 +8,8 @@ public class SwordFightingGameEditorTarget : TargetRules
 	public SwordFightingGameEditorTarget(TargetInfo Target) : base(Target)
 	{
 		Type = TargetType.Editor;
-		DefaultBuildSettings = BuildSettingsVersion.V2;
-		ExtraModuleNames.Add("SwordFightingGame");
+		DefaultBuildSettings = BuildSettingsVersion.V5;
+        IncludeOrderVersion = EngineIncludeOrderVersion.Unreal5_4;
+        ExtraModuleNames.Add("SwordFightingGame");
 	}
 }

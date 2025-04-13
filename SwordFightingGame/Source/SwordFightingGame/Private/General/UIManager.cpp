@@ -3,6 +3,8 @@
 
 #include "General/UIManager.h"
 #include "Blueprint/UserWidget.h"
+#include "Animation/WidgetAnimation.h"
+#include "Blueprint/WidgetBlueprintGeneratedClass.h"
 #include "Kismet/GameplayStatics.h"
 
 // Sets default values
@@ -30,45 +32,27 @@ void AUIManager::Tick(float DeltaTime)
 void AUIManager::PlayWidgetAnimation(UUserWidget* a_pWidget, FString a_sName, bool a_bReverse)
 {
 	// Return if the widget is null
-	if (a_pWidget == nullptr)
+	if (a_pWidget)
 	{
 		return;
 	}
 
-	// Get all widget animations from death screen
-	UProperty* Prop = a_pWidget->GetClass()->PropertyLink;
-
 	// Variable to store widget anim
 	UWidgetAnimation* pAnim = nullptr;
 
-	// Run through all properties of this class to find any widget animations
-	while (Prop != nullptr)
+	// Get blueprint generated class of widget and check if its valid
+	UWidgetBlueprintGeneratedClass* WidgetClass = Cast<UWidgetBlueprintGeneratedClass>(a_pWidget->GetClass());
+	if (WidgetClass)
 	{
-		// Only interested in object properties
-		if (Prop->GetClass() == UObjectProperty::StaticClass())
+		// Iterate through all widget animations attached
+		for (UWidgetAnimation* Animation : WidgetClass->Animations)
 		{
-			UObjectProperty* ObjProp = Cast<UObjectProperty>(Prop);
-
-			// Only want the properties that are widget animations
-			if (ObjProp->PropertyClass == UWidgetAnimation::StaticClass())
+			// If the names match what we're looking for, set the animation to current
+			if (Animation && Animation->GetFName() == a_sName)
 			{
-				UObject* Obj = ObjProp->GetObjectPropertyValue_InContainer(a_pWidget);
-
-				UWidgetAnimation* WidgetAnim = Cast<UWidgetAnimation>(Obj);
-
-				if (WidgetAnim != nullptr && WidgetAnim->MovieScene != nullptr)
-				{
-					FName AnimName = WidgetAnim->MovieScene->GetFName();
-					if (AnimName.ToString() == a_sName)
-					{
-						pAnim = WidgetAnim;
-						break;
-					}
-				}
+				pAnim = Animation;
 			}
 		}
-
-		Prop = Prop->PropertyLinkNext;
 	}
 
 	// Play the widget animation if valid

@@ -8,7 +8,8 @@ public class SwordFightingGameTarget : TargetRules
 	public SwordFightingGameTarget(TargetInfo Target) : base(Target)
 	{
 		Type = TargetType.Game;
-		DefaultBuildSettings = BuildSettingsVersion.V2;
-		ExtraModuleNames.Add("SwordFightingGame");
+		DefaultBuildSettings = BuildSettingsVersion.V5;
+        IncludeOrderVersion = EngineIncludeOrderVersion.Unreal5_4;
+        ExtraModuleNames.Add("SwordFightingGame");
 	}
 }
